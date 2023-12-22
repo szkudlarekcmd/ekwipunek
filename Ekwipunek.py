@@ -13,7 +13,8 @@ class Przedmiot(ABC):
         # 3 pola, które dziedziczą wszystkie klasy
         self._nazwa = nazwa
         self._wartosc = wartosc
-        self.ilosc = ilosc
+        self.ilosc = ilosc # Generalna uwaga. Ilość nie powinna pochodzic z góry, jako że gdy dodaje przedmiot do ekwipunku to nie wiem jaka jest jego ilość.
+        # Ta wartość powinna się internalnie inkrementować i dekrementować, ale nie powinienem móc jest zmienić z zewnątrz
 
     # tutaj wykorzystanie dekoratora property w tym celu, by pola były immutable.
     @property
@@ -26,7 +27,7 @@ class Przedmiot(ABC):
 
 
 # podział klas zrobiłem na podstawie rodzajów przedmiotów
-class Bron(Przedmiot):
+class Bron(Przedmiot): # stworz subklasy luk, kusza, bron jednoreczna, bron dwureczna itd
     """
     Klasa broni - Standardowe pola to nazwa, wartość, ilość, wymagania statystyk do
     użycia broni, typ broni (jednoręczna/dwuręczna/kusza/łuki - nie ma podziału na broń
@@ -38,13 +39,15 @@ class Bron(Przedmiot):
         nazwa: str,
         wartosc: int,
         ilosc: int,
-        wymagania: dict,
+        wymagania: dict, # typing. Opisz czym są wymagania
         typ: str,
         obrazenia: float,
     ):
         """
         dziedziczę pola wspólne, dodaję nowe
-        ta podłoga, tak wyczytałem, wskazuje na to, że pole jest immutable
+        ta podłoga, tak wyczytałem, wskazuje na to, że pole jest immutable <- nie do końca, to jest tylko oznaczenie że pole jest prywatne. 
+        Ale nie ma rzeczywistego przełożenia, gdyż python nie ma konceptu prywatności i publiczności. Ustawienie tylko gettera sprawia że pole staje 
+        sie read-only. To samo można uzyskać przy pomocy __setattribute__ a dekorator robi to za Ciebie
         """
         super().__init__(nazwa, wartosc, ilosc)
         self._wymagania = wymagania
@@ -64,7 +67,7 @@ class Bron(Przedmiot):
         return self._obrazenia
 
 
-class Pancerze(Przedmiot):
+class Pancerze(Przedmiot): # Pancerz, bo jest to klasa Pancerza, a nie kontener który zawiera wszystkie Pancerze
     """
     Klasa pancerzy. Standardowe pola to nazwa, wartosc, ilosc, ochrona przed bronia, magia,2 strzalami
     oraz ogniem.
@@ -104,7 +107,7 @@ class Pancerze(Przedmiot):
 
 
 
-class Magia(Przedmiot):
+class Magia(Przedmiot): # stworz subklasy runa i zwój
     """
     Klasa Magii - w tym wypadku ograniczyłem się tylko do run ze względu na wymagany krąg,
     jednak dodanie zwojów i podawanie kręgu jako opcjonalny argument nie powinno być trudne.
@@ -118,12 +121,12 @@ class Magia(Przedmiot):
         wartosc: int,
         ilosc: int,
         mana: int,
-        dzialanie: dict,
+        dzialanie: dict, # typing, opisz co znaczy działanie
         krag: int = None,
     ):
         super().__init__(nazwa, wartosc, ilosc)
         self._mana = mana
-        self._dzialanie = dzialanie
+        self._dzialanie = dzialanie # Pole działanie powinno byc dla innych klas również
         self._krag = krag
 
     @property
@@ -139,7 +142,7 @@ class Magia(Przedmiot):
         return self._krag
 
 
-class Pisma(Przedmiot):
+class Pisma(Przedmiot): # Pismo, bo jest to klasa Pisma, a nie kontener który zawiera wszystkie Pisma
     """
     Klasa Pism - wyjątkowa klasa, ponieważ pisma nie można "ubrać". Użycie danej pozycji powoduje
     wyprintowanie treści do konsoli. Standardowe pola to nazwa, wartość, ilość oraz treść.
@@ -168,7 +171,7 @@ class Jedzenie(Przedmiot):
         wartosc: int,
         ilosc: int,
         HP: int,
-        bonusy={"brak": 0},
+        bonusy={"brak": 0}, # None, i ustaw typing 
     ):
         super().__init__(nazwa, wartosc, ilosc)
         self.ilosc = ilosc
@@ -184,7 +187,8 @@ class Jedzenie(Przedmiot):
         return self._bonusy
 
 
-class Artefakty(Przedmiot):
+class Artefakty(Przedmiot): # Artefakt, a nie Artefakty. Zrób dodatkową subklasę "PrzedmiotUzywalny" który dodaje metodę "użyj". Nowe subklasy 
+    # Pierścień, amulet, tablica, i jesli uznasz że coś jeszcze to stwórz.
     """
     Klasa artefakty. Artefakty jako jedyne mają dodatkowe pole uzycie - informuje ono, czy przedmiot
     można użyć, czy tez nie. Uznałem, że wszystkie wcześniejsze klasy można użyc, więc takie pole
@@ -201,9 +205,11 @@ class Artefakty(Przedmiot):
         return self._uzycie
 
 
-class Pozostale(Przedmiot):
+class Pozostale(Przedmiot): 
     """
+    # Najtrudniejsza klasa, bo dośc generyczna. Powinna przyjmować parametr używalności, tak samo jak ta powyżej. Dodaj jej kwargs, ale powinna ona obsłużyć tylko konkretne kwargsy, a nie cokolwiek
     Klasa Pozostałe, standardowe pola to nazwa, wartość oraz ilość.
+    
     Ta klasa trochę nie podoba mi się ze względu na zadaną liczbę argumentów
     imo powinno to być tak, że ta klasa może mieć dowolne argumenty
     nie wiem natomiast jak to zrobić, by były dziedziczone 3 podstawowe argumenty
@@ -215,16 +221,19 @@ class Pozostale(Przedmiot):
     def __init__(self, nazwa: str, wartosc: int, ilosc: int):
         super().__init__(nazwa, wartosc, ilosc)
 
-
+# Generalna sprawa. Ekwipunek powinien mieć kontenery: Bronie, Magiczne etc. do nich na podstawie typu dodajesz odpowiedni przedmio.
+# Używaj isinstance! Możesz użyć danej klasy kontenera jako klucz słownika w_użyciu ( generalny koncept, pomyśl jak to dobrze zrobić )
 class Ekwipunek:
-    magazyn = {}
-    w_uzyciu = {}
+    magazyn = {} # to powinny być wewnętrzne pola klasy i edytowalne tylko za pomocą metod ekwipunku
+    w_uzyciu = {} 
 
     def uzyj(self, przedmiot):
-        if przedmiot.nazwa in self.magazyn:
-            if przedmiot.__class__.__name__ == "Bron":
+        # powinna być walidacja wymagań
+        if przedmiot.nazwa in self.magazyn: # To nie powinno być potrzebne, jako że logicznym jest że nie będziesz próbował założyć czegoś czego nie masz. 
+            # Załóż że przedmiot musi być w ekwipunku. 
+            if przedmiot.__class__.__name__ == "Bron": # do takich rzeczy polecam jednak isinstance
                 if (
-                    przedmiot.typ == "broń jednoręczna"
+                    przedmiot.typ == "broń jednoręczna"# tak samo tutaj. Dlatego zdefiniuj te subklasy. To ułatwi sprawę
                     or przedmiot.typ == "broń dwuręczna"
                 ):
                     self.w_uzyciu.update({"Broń biała": przedmiot.nazwa})
@@ -233,9 +242,9 @@ class Ekwipunek:
             elif przedmiot.__class__.__name__ == "Pancerze":
                 self.w_uzyciu.update({"Pancerz": przedmiot.nazwa})
             elif przedmiot.__class__.__name__ == "Magia":
-                if przedmiot.krag == None:
+                if przedmiot.krag == None: # if not przemiot.krag
                     print("Zwój został użyty!")
-                    self.wyrzuc_bez_printowania(przedmiot)
+                    self.wyrzuc_bez_printowania(przedmiot) # jeśli wyrzucasz, to znaczy że mogę go znowu podnieść i znowu użyć ;)
                 else:
                     self.w_uzyciu.update({"Magia": przedmiot.nazwa})
             elif przedmiot.__class__.__name__ == "Pisma":
@@ -286,9 +295,9 @@ class Ekwipunek:
         else:
             print("Przedmiot nie znajdował się w ekwipunku!")
 
-    def dodaj(self, przedmiot):
+    def dodaj(self, przedmiot): # typing, tu i wszędzie
         if przedmiot.nazwa not in self.magazyn:
-            if przedmiot.__class__.__name__ == "Bron":
+            if przedmiot.__class__.__name__ == "Bron": # isinstance, tu i wszędzie
                 self.magazyn.update(
                     {
                         przedmiot.nazwa: {
@@ -374,12 +383,12 @@ class Ekwipunek:
         else:
             self.magazyn[przedmiot.nazwa]["Ilość"] += 1
 
-    def wyswietl(self, Klasa="Brak"):
+    def wyswietl(self, Klasa="Brak"): # typ = None zamiast Klasa
         if Klasa == "Brak":
             sorted_data = dict(
                 sorted(
                     self.magazyn.items(),
-                    key=lambda item: item[1]["Wartość"],
+                    key=lambda item: item[1]["Wartość"], # sortowanie w sumie mogłoby być zależne od parametru
                     reverse=True,
                 )
             )
@@ -396,9 +405,9 @@ class Ekwipunek:
                     reverse=True,
                 )
             )
-            for i in sorted_data_klasy:
-                if self.magazyn[i]["Klasa"] == Klasa:
-                    print(i, f"\n {self.magazyn[i]}")
+            for i in sorted_data_klasy: # redundante względem tego wyżej
+                if self.magazyn[i]["Klasa"] == Klasa: 
+                    print(i, f"\n {self.magazyn[i]}") 
 
     """
     Metoda naostrz, która jako jedyna pozwala zmieniać pole obrażenia
@@ -412,6 +421,7 @@ class Ekwipunek:
         if przedmiot.__class__.__name__ == "Bron" and (
             przedmiot.typ == "broń jednoręczna" or przedmiot.typ == "broń dwuręczna"
         ):
+            # to mi sie nie podoba, ale wyjaśniłem to wyżej ( komentarz ogólny do Ekwipunek )
             self.magazyn[przedmiot.nazwa]["Obrażenia"] += 1
         else:
             print("Danego przedmiotu nie da się naostrzyć")
@@ -446,6 +456,7 @@ Artefakt_2 = Artefakty("Kamień ogniskujący", 0, 1, "Nie")
 Pozostale_1 = Pozostale("Grabie", 0, 1)
 
 Ekwipunek_Obiekt = Ekwipunek()
+# wszystkie te operacje rób na obiekcie a nie na klasie, po to go stworzyłes
 Ekwipunek.dodaj(Ekwipunek_Obiekt, Miecz_1)
 Ekwipunek.dodaj(Ekwipunek_Obiekt, Miecz_1)
 Ekwipunek.naostrz(Ekwipunek_Obiekt, Miecz_1)
