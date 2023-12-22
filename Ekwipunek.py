@@ -1,4 +1,5 @@
 """
+lolo
 Koncept jest taki, że w kodzie polskich znaków nie ma oprócz stringów.
 """
 from abc import ABC
