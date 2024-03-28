@@ -2,10 +2,10 @@
 Konwencja -> Koncept jest taki, że w kodzie polskich znaków nie ma oprócz stringów.
 Wszystko w pierdolnikach jest oficjalne
 """
-# komentarze zaczynajace sie od hashtaga sa skierowane bezposrednio do Ciebie
 from abc import ABC
+from typing import Any
+import math
 
-# no tu pewnie troche przesadzilem :D
 # pylint: disable=missing-function-docstring, too-many-arguments, unnecessary-pass
 # pylint: disable=too-few-public-methods, protected-access, too-many-branches
 # pylint: disable=too-many-nested-blocks, too-many-instance-attributes
@@ -21,10 +21,11 @@ class Przedmiot(ABC):
         o tym co przedmiot robi
     """
 
-    def __init__(self, nazwa: str, wartosc: int, efekt: dict[str, int] | None):
+    def __init__(self, nazwa: str, wartosc: int, efekt: dict[str, Any] | None):
         self._nazwa = nazwa
         self._wartosc = wartosc
         self._efekt = efekt
+
     @property
     def nazwa(self):
         return self._nazwa
@@ -56,11 +57,13 @@ class Bron(Przedmiot):
         nazwa: str,
         wartosc: int,
         wymagania: dict[str, int],
-        obrazenia: float,
+        obrazenia: int | None = None,
         efekt: dict[str, int] | None = None,
     ):
         if efekt is None:
             efekt = {"obrażenia": obrazenia}
+        elif efekt is dict and obrazenia is None:
+            efekt["obrażenia"] = obrazenia
         super().__init__(nazwa, wartosc, efekt)
         self._wymagania = wymagania
         self._obrazenia = obrazenia
@@ -74,21 +77,69 @@ class Bron(Przedmiot):
         return self._obrazenia
 
 
-class Luk(Bron):
+class BronBiala(Bron):
+    def __init__(
+        self,
+        nazwa: str,
+        wartosc: int,
+        wymagania: dict[str, int],
+        obrazenia: int,
+        naostrzony: bool,
+        zasieg: int = 1,
+        efekt: dict[str, int] | None = None,
+    ):
+        if efekt is None:
+            efekt = {"obrażenia": obrazenia}
+        super().__init__(nazwa, wartosc, wymagania, obrazenia, efekt)
+        self._naostrzony = naostrzony
+        self._zasieg = zasieg
+
+    @property
+    def naostrzony(self):
+        return self._naostrzony
+
+    @property
+    def zasieg(self):
+        return self._zasieg
+
+
+class BronDystansowa(Bron):
+    def __init__(
+        self,
+        nazwa: str,
+        wartosc: int,
+        wymagania: dict[str, int],
+        obrazenia: int,
+        zasieg: int = 1,
+        efekt: dict[str, int] | None = None,
+    ):
+        if efekt is None:
+            efekt = {"obrażenia": obrazenia}
+        super().__init__(nazwa, wartosc, wymagania, obrazenia, efekt)
+        self._zasieg = zasieg
+
+    @property
+    def zasieg(self):
+        return self._zasieg
+
+
+class Luk(BronDystansowa):
     """
     Klasa Łuk -> nie dzieje się tu zbyt wiele.
     """
+
     pass
 
 
-class Kusza(Bron):
+class Kusza(BronDystansowa):
     """
     Klasa Kusza -> nie dzieje się tu zbyt wiele.
     """
+
     pass
 
 
-class BronJednoreczna(Bron):
+class BronJednoreczna(BronBiala):
     """
     Klasa Broń Jednoręczna - dziedziczy ona po klasie broń, dodaje nowe pole -> naostrzony.
 
@@ -102,26 +153,10 @@ class BronJednoreczna(Bron):
         o tym co przedmiot robi
     """
 
-    def __init__(
-        self,
-        nazwa: str,
-        wartosc: int,
-        wymagania: dict[str, int],
-        obrazenia: float,
-        naostrzony: bool,
-        efekt: dict[str, int] | None = None,
-    ):
-        if efekt is None:
-            efekt = {"obrażenia": obrazenia}
-        super().__init__(nazwa, wartosc, wymagania, obrazenia, efekt)
-        self._naostrzony = naostrzony
-
-    @property
-    def naostrzony(self):
-        return self._naostrzony
+    pass
 
 
-class BronDwureczna(Bron):
+class BronDwureczna(BronBiala):
     """
     Klasa Broń Dwuręczna - dziedziczy ona po klasie broń, dodaje nowe pole -> naostrzony.
 
@@ -134,23 +169,8 @@ class BronDwureczna(Bron):
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
-    def __init__(
-        self,
-        nazwa: str,
-        wartosc: int,
-        wymagania: dict[str, int],
-        obrazenia: float,
-        naostrzony: bool,
-        efekt: dict[str, int] | None = None,
-    ):
-        if efekt is None:
-            efekt = {"obrażenia": obrazenia}
-        super().__init__(nazwa, wartosc, wymagania, obrazenia, efekt)
-        self._naostrzony = naostrzony
 
-    @property
-    def naostrzony(self):
-        return self._naostrzony
+    pass
 
 
 class Pancerz(Przedmiot):
@@ -159,10 +179,7 @@ class Pancerz(Przedmiot):
 
     :param nazwa: nazwa przedmiotu
     :param wartosc: nazwa przedmiotu wyrażana w sztukach złota
-    :param bron: ochrona przed bronią
-    :param strzaly: ochrona przed strzałami
-    :param ogien: ochrona przed ogniem
-    :param magia: ochrona przed strzałami
+    :param ochrona: ochrona przed bronią
     :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
@@ -172,35 +189,31 @@ class Pancerz(Przedmiot):
         self,
         nazwa: str,
         wartosc: int,
-        bron: int,
-        strzaly: int,
-        ogien: int,
-        magia: int,
+        ochrona: dict[str, int],
+        wymagania: dict[str, int],
         efekt: dict[str, int] | None = None,
     ):
         if efekt is None:
-            efekt = {"Ochrona"}
+            efekt = ochrona
         super().__init__(nazwa, wartosc, efekt)
-        self._bron = bron
-        self._strzaly = strzaly
-        self._ogien = ogien
-        self._magia = magia
+        default_ochrona: dict[str, int] = {
+            "Ochrona przed bronią": 0,
+            "Ochrona przed strzałami": 0,
+            "Ochrona przed magią": 0,
+            "Ochrona przed ogniem": 0,
+        }
+        default_ochrona.update(ochrona)
+        self._ochrona = ochrona
+        self._ochrona = default_ochrona
+        self._wymagania = wymagania
 
     @property
-    def bron(self):
-        return self._bron
+    def ochrona(self):
+        return self._ochrona
 
     @property
-    def strzaly(self):
-        return self._strzaly
-
-    @property
-    def ogien(self):
-        return self._ogien
-
-    @property
-    def magia(self):
-        return self._magia
+    def wymagania(self):
+        return self._wymagania
 
 
 class Magia(Przedmiot):
@@ -213,8 +226,6 @@ class Magia(Przedmiot):
     :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
-    :param krag: wymagany krąg magii, znajduje się on wtedy gdy mamy do
-        czynienia z runą i jest to jedyny sposób na ich rozróżnienie
     """
 
     def __init__(
@@ -222,39 +233,53 @@ class Magia(Przedmiot):
         nazwa: str,
         wartosc: int,
         mana: int,
-        efekt: dict[str, int],
-        krag: int = None,
+        efekt: dict[str, Any],
+        wymagania: dict[str, int] = None,
     ):
         super().__init__(nazwa, wartosc, efekt)
         self._mana = mana
-        self._efekt = efekt
-        self._krag = krag
+        if wymagania is None:
+            self._wymagania = {"Koszt many": self.mana}
 
     @property
     def mana(self):
         return self._mana
 
     @property
-    def efekt(self):
-        return self._efekt
-
-    @property
-    def krag(self):
-        return self._krag
+    def wymagania(self):
+        return self._wymagania
 
 
 class Zwoj(Magia):
     """
     Klasa Zwój dziedzicząca z klasy Magia.
     """
+
     pass
 
 
 class Runa(Magia):
     """
     Klasa Runa dziedzicząca z klasy Magia.
+
+    :param krag: wymagany krąg magii, znajduje się on wtedy gdy mamy do
+    czynienia z runą i jest to jedyny sposób na ich rozróżnienie
     """
-    pass
+
+    def __init__(
+        self,
+        nazwa: str,
+        wartosc: int,
+        mana: int,
+        efekt: dict[str, Any],
+        krag: int,
+    ):
+        super().__init__(nazwa, wartosc, mana, efekt)
+        self._krag = krag
+
+    @property
+    def krag(self):
+        return self._krag
 
 
 class Pismo(Przedmiot):
@@ -268,22 +293,24 @@ class Pismo(Przedmiot):
     :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
+    :param ilosc_stron: ilość stron
     """
 
-
-
     def __init__(
-        self, nazwa: str, wartosc: int, tresc: str, efekt: dict[str, int] | None | str
+        self,
+        nazwa: str,
+        wartosc: int,
+        tresc: str,
+        efekt: dict[str, int] | None | str = None,
     ):
-        super().__init__(nazwa, wartosc, efekt)
         self._tresc = tresc
+        if efekt is None:
+            efekt = {"Treść": tresc}
+        super().__init__(nazwa, wartosc, efekt)
 
     @property
     def tresc(self):
         return self._tresc
-
-    def zastosowanie(self):
-        print(self._tresc)
 
 
 class Jedzenie(Przedmiot):
@@ -307,8 +334,6 @@ class Jedzenie(Przedmiot):
     ):
         super().__init__(nazwa, wartosc, efekt)
 
-    def zastosowanie(self):
-        print(f"Przyznano efekt w postaci {self.efekt}")
 
 class Artefakt(Przedmiot):
     """
@@ -329,6 +354,7 @@ class Pierscien(Artefakt):
     """
     Klasa Pierścien dziedzicząca z klasy Artefakt
     """
+
     pass
 
 
@@ -336,14 +362,24 @@ class Amulet(Artefakt):
     """
     Klasa Amulet dziedzicząca z klasy Artefakt
     """
+
     pass
 
 
 class Tablica(Artefakt):
-    """
-    Klasa Tablica dziedzicząca z klasy Artefakt
-    """
-    pass
+    def __init__(
+        self,
+        nazwa: str,
+        wartosc: int,
+        wymagania: dict[str, int],
+        efekt: dict[str, int] | None = None,
+    ):
+        super().__init__(nazwa, wartosc, efekt)
+        self._wymagania = wymagania
+
+    @property
+    def wymagania(self):
+        return self._wymagania
 
 
 class Pozostale(Przedmiot):
@@ -362,18 +398,15 @@ class Pozostale(Przedmiot):
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
-    # Dodaj jej kwargs, ale powinna ona obsłużyć tylko konkretne kwargsy,
-    # a nie cokolwiek < - jest to Twój komentarz z review -> rozwiń proszę,
-    # ponieważ nie do końca rozumiem o co chodzi, jakie konkretne kwargsy w tym wypadku?
-    # myślę, że można to zawrzec również w efekt... Daj znać.
-    def __init__(self, nazwa: str, wartosc: int, efekt: dict[str, int] | None):
-        super().__init__(nazwa, wartosc, efekt)
+
+    pass
 
 
 class Bronie(dict):
     """
     Kontener na przedmioty klasy Broń posiadający metodę wyświetl
     """
+
     def wyswietl(self):
         return self
 
@@ -382,6 +415,7 @@ class Pancerze(dict):
     """
     Kontener na przedmioty klasy Pancerz posiadający metodę wyświetl
     """
+
     def wyswietl(self):
         return self
 
@@ -390,6 +424,7 @@ class PrzedmiotyMagiczne(dict):
     """
     Kontener na przedmioty klasy Magia posiadający metodę wyświetl
     """
+
     def wyswietl(self):
         return self
 
@@ -398,6 +433,7 @@ class Pisma(dict):
     """
     Kontener na przedmioty klasy Pisma posiadający metodę wyświetl
     """
+
     def wyswietl(self):
         return self
 
@@ -406,6 +442,7 @@ class Artefakty(dict):
     """
     Kontener na przedmioty klasy Artefakt posiadający metodę wyświetl
     """
+
     def wyswietl(self):
         return self
 
@@ -414,6 +451,7 @@ class Zywnosc(dict):
     """
     Kontener na przedmioty klasy Jedzenie posiadający metodę wyświetl
     """
+
     def wyswietl(self):
         return self
 
@@ -422,8 +460,10 @@ class Pozostalosci(dict):
     """
     Kontener na przedmioty klasy Pozostale posiadający metodę wyświetl
     """
+
     def wyswietl(self):
         return self
+
 
 class Ekwipunek:
     """
@@ -441,6 +481,7 @@ class Ekwipunek:
     :param w_uzyciu: kontener zawierający przedmioty znajdujące się w danej
         chwili w użyciu
     """
+
     def __init__(self):
         self._bronie = Bronie()
         self._pancerze = Pancerze()
@@ -449,15 +490,6 @@ class Ekwipunek:
         self._artefakty = Artefakty()
         self._jedzenie = Zywnosc()
         self._pozostale = Pozostalosci()
-        self._magazyn = {
-            "Bronie": self._bronie,
-            "Pancerze": self._pancerze,
-            "Przemioty Magiczne": self._przedmioty_magiczne,
-            "Pisma": self._pisma,
-            "Artefakty": self._artefakty,
-            "Jedzenie": self._jedzenie,
-            "Pozostałe": self._pozostale,
-        }
         self._w_uzyciu = {}
 
     @property
@@ -501,18 +533,18 @@ class Ekwipunek:
         Metoda wyrzuć wyrzucająca dany przedmiot z obiektu klasy Ekwipunek i zwracająca go
         do obiektu klasy Podłoga.
         """
-        print("Przedmioty, które możesz wyrzucić, lub wpisz 'wyjscie', by wyjść:")
+        print("Przedmioty, które możesz wyrzucić, lub wpisz 'exit', by wyjść:")
         for key, value in self.wyswietl_magazyn().items():
             for k, v in value.items():
                 print(k + " sztuk " + str(len(v)))
         val = input("Podaj nazwę przedmiotu, który chcesz wyrzucić")
-        if val == "wyjscie":
+        if val == "exit":
             pass
         else:
             for key, value in self.wyswietl_magazyn().items():
                 if val in value:
                     przedmiot = self.magazyn[key][val][0]
-                    Podloga_Obiekt.zawartosc.append(przedmiot)
+                    Khorinis_Obiekt.zawartosc.append(przedmiot)
                     # mogę wyrzucić przedmiot w uzyciu, ale wtedy wylatuje on zarowno z w_uzyciu jak
                     # i z kontenera (ZAWSZE), wynika to z linijki
                     # przedmiot = self.magazyn[key][val][0]
@@ -523,7 +555,7 @@ class Ekwipunek:
                     if isinstance(przedmiot, Bron):
                         self._bronie[przedmiot.nazwa].remove(przedmiot)
                         if len(self._bronie[przedmiot.nazwa]) == 0:
-                            self._bronie[przedmiot.nazwa].remove(przedmiot)
+                            # self._bronie[przedmiot.nazwa].remove(przedmiot)
                             del self._bronie[przedmiot.nazwa]
                     elif isinstance(przedmiot, Pancerz):
                         self._pancerze[przedmiot.nazwa].remove(przedmiot)
@@ -574,19 +606,23 @@ class Ekwipunek:
             for k, v in value.items():
                 if v[0].efekt:
                     print(k + " sztuk " + str(len(v)))
-        val = input("Podaj nazwę przedmiotu, który chciałbyś użyć, lub wpisz 'wyjście', by wyjść: ")
-        if val == "wyjscie":
-            print(self.wyswietl_w_uzyciu)
+        val = input(
+            "Podaj nazwę przedmiotu, który chciałbyś użyć, lub wpisz 'exit', by wyjść: "
+        )
+        if val == "exit":
+            print(self.w_uzyciu)
         else:
             a = 0
             for key, value in self.wyswietl_magazyn().items():
                 # powinna być walidacja wymagań < - komentarz z Twojego review, rozwiń proszę
                 if val in value:
-                    przedmiot = self.magazyn[key][val][0]
+                    przedmiot = self.wyswietl_magazyn()[key][val][0]
+                    if przedmiot.efekt is None:
+                        print("Danego przedmiotu nie da się użyć.")
                     if isinstance(przedmiot, Pismo):
-                        przedmiot.zastosowanie()
+                        print(przedmiot.efekt)
                     elif isinstance(przedmiot, Jedzenie):
-                        przedmiot.zastosowanie()
+                        print(przedmiot.efekt)
                         self._jedzenie[przedmiot.nazwa].remove(przedmiot)
                         if len(self._jedzenie[przedmiot.nazwa]) == 0:
                             del self._jedzenie[przedmiot.nazwa]
@@ -672,19 +708,189 @@ class Ekwipunek:
         """
         Metoda zwracająca kontener magazyn
         """
+        self._magazyn = {
+            "Bronie": self._bronie,
+            "Pancerze": self._pancerze,
+            "Przemioty Magiczne": self._przedmioty_magiczne,
+            "Pisma": self._pisma,
+            "Artefakty": self._artefakty,
+            "Jedzenie": self._jedzenie,
+            "Pozostałe": self._pozostale,
+        }
         return self.magazyn
 
     def wyswietl_w_uzyciu(self):
-        """
-        Metoda zwracająca kontener w_uzyciu
-        """
-        return self.w_uzyciu
+        for k, v in self.w_uzyciu.items():
+            print(k, v.nazwa)
+
+    def interfejs(self, lokalizacja, init=False):
+        loc = lokalizacja
+        kolejny_slownik = {}
+        ID = 0
+        if init is False:
+            print(
+                "\nJeśli dany przedmiot można użyć, to przy jego ilości sztuk pojawi się kratka."
+                "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. "
+                "\nJeśli dany przedmiot jest wybrany, to znajduje się przy nim strzałka"
+            )
+
+        for key, value in self.wyswietl_magazyn().items():
+            for k, v in value.items():
+                if bool(set(v) & set(self.w_uzyciu.values())):
+                    print(f"{ID} * " + k + "    #" + " sztuk " + str(len(v)))
+                    kolejny_slownik[ID] = k
+                    ID += 1
+                elif v[0].efekt:
+                    print(f"{ID} " + k + "   #" + " sztuk " + str(len(v)))
+                    kolejny_slownik[ID] = k
+                    ID += 1
+                else:
+                    print(f"{ID} " + k + " sztuk " + str(len(v)))
+                    kolejny_slownik[ID] = k
+                    ID += 1
+        val = input(
+            "Podaj ID przedmiotu, ktory chcesz wybrać, lub wpisz 'exit', by wyjść: "
+        )
+        if val == "exit":
+            return 0
+        else:
+            a = 0
+            for key, value in self.wyswietl_magazyn().items():
+                # val = Szept Burzy
+                # value = {'Szept Burzy': [<__main__.BronJednoreczna object at 0x10233c550>, <__main__.BronJednoreczna object at 0x10233c580>, <__main__.BronJednoreczna object at 0x10233c5b0>], 'Kij z gwoździem': [<__main__.BronJednoreczna object at 0x10233c5e0>], 'Zmyślony Łuk': [<__main__.Luk object at 0x10233c610>], 'Zmyślona Kusza': [<__main__.Kusza object at 0x10233c640>]}
+                if kolejny_slownik[int(val)] in value:
+                    przedmiot = self.wyswietl_magazyn()[key][kolejny_slownik[int(val)]][
+                        0
+                    ].nazwa
+                    przedmioty_w_uzyciu = [
+                        Ekwipunek_Obiekt.w_uzyciu[key].nazwa
+                        for key in Ekwipunek_Obiekt.w_uzyciu
+                    ]
+                    print(f"Wybrany przedmiot:\n{przedmiot}")
+                    if kolejny_slownik[int(val)] not in przedmioty_w_uzyciu:
+                        wal = input(
+                            "Co chcesz zrobić z danym przedmiotem?\n1. Użyj\n2. Wyrzuć\n3. Wybierz inny przedmiot"
+                        )
+                    elif kolejny_slownik[int(val)] in przedmioty_w_uzyciu:
+                        wal = input(
+                            "Co chcesz zrobić z danym przedmiotem?\n1. Zdejmij\n2. Wyrzuć\n3. Wybierz inny przedmiot"
+                        )
+                    if (
+                        wal == str(1)
+                        and kolejny_slownik[int(val)] not in przedmioty_w_uzyciu
+                    ):
+                        przedmiot = self.wyswietl_magazyn()[key][
+                            kolejny_slownik[int(val)]
+                        ][0]
+                        if przedmiot.efekt:
+                            if isinstance(przedmiot, Pismo):
+                                print(przedmiot.efekt)
+                            elif isinstance(przedmiot, Jedzenie):
+                                print(przedmiot.efekt)
+                                self._jedzenie[przedmiot.nazwa].remove(przedmiot)
+                                if len(self._jedzenie[przedmiot.nazwa]) == 0:
+                                    del self._jedzenie[przedmiot.nazwa]
+                            elif isinstance(przedmiot, Magia):
+                                if not przedmiot.krag:
+                                    print("\nZwój został użyty!\n")
+                                    self._przedmioty_magiczne[przedmiot.nazwa].remove(
+                                        przedmiot
+                                    )
+                                    if (
+                                        len(self._przedmioty_magiczne[przedmiot.nazwa])
+                                        == 0
+                                    ):
+                                        del self._przedmioty_magiczne[przedmiot.nazwa]
+                                else:
+                                    self._w_uzyciu.update(
+                                        {
+                                            str(type(przedmiot)).split(sep=".")[
+                                                1
+                                            ]: przedmiot
+                                        }
+                                    )
+                            elif isinstance(przedmiot, Pozostale):
+                                pass
+                            else:
+                                self._w_uzyciu.update(
+                                    {str(type(przedmiot)).split(sep=".")[1]: przedmiot}
+                                )
+                            a = 1
+                            print("\nPrzedmiot został użyty!\n")
+                            self.interfejs(loc, init=True)
+                        else:
+                            print("\nPrzedmiotu nie da się użyć!\n")
+                            self.interfejs(loc, init=True)
+                    elif (
+                        wal == str(1)
+                        and kolejny_slownik[int(val)] in przedmioty_w_uzyciu
+                    ):
+                        przedmiot = self.wyswietl_magazyn()[key][
+                            kolejny_slownik[int(val)]
+                        ][0]
+                        for key, value in Ekwipunek_Obiekt.w_uzyciu.copy().items():
+                            if value == przedmiot:
+                                del Ekwipunek_Obiekt.w_uzyciu[key]
+                                przedmioty_w_uzyciu.remove(przedmiot.nazwa)
+                        print("\nPrzedmiot został zdjęty!\n")
+                        self.interfejs(loc, init=True)
+                    elif wal == str(2):
+                        przedmiot = self.wyswietl_magazyn()[key][
+                            kolejny_slownik[int(val)]
+                        ][0]
+                        lokalizacja.zawartosc.append(przedmiot)
+                        for k, v in self.w_uzyciu.copy().items():
+                            if przedmiot == v:
+                                print(
+                                    "\nNie można usunąć przedmiotu, który jest w użyciu!\n"
+                                )
+                                self.interfejs(loc, init=True)
+                        if isinstance(przedmiot, Bron):
+                            self._bronie[przedmiot.nazwa].remove(przedmiot)
+                            if len(self._bronie[przedmiot.nazwa]) == 0:
+                                del self._bronie[przedmiot.nazwa]
+                        elif isinstance(przedmiot, Pancerz):
+                            self._pancerze[przedmiot.nazwa].remove(przedmiot)
+                            if len(self._pancerze[przedmiot.nazwa]) == 0:
+                                del self._pancerze[przedmiot.nazwa]
+                        elif isinstance(przedmiot, Magia):
+                            self._przedmioty_magiczne[przedmiot.nazwa].remove(przedmiot)
+                            if len(self._przedmioty_magiczne[przedmiot.nazwa]) == 0:
+                                del self._przedmioty_magiczne[przedmiot.nazwa]
+                        elif isinstance(przedmiot, Pismo):
+                            self._pisma[przedmiot.nazwa].remove(przedmiot)
+                            if len(self._pisma[przedmiot.nazwa]) == 0:
+                                del self._pisma[przedmiot.nazwa]
+                        elif isinstance(przedmiot, Artefakt):
+                            self._artefakty[przedmiot.nazwa].remove(przedmiot)
+                            if len(self._artefakty[przedmiot.nazwa]) == 0:
+                                del self._artefakty[przedmiot.nazwa]
+                        elif isinstance(przedmiot, Jedzenie):
+                            self._jedzenie[przedmiot.nazwa].remove(przedmiot)
+                            if len(self._jedzenie[przedmiot.nazwa]) == 0:
+                                del self._jedzenie[przedmiot.nazwa]
+                        elif isinstance(przedmiot, Pozostale):
+                            self._pozostale[przedmiot.nazwa].remove(przedmiot)
+                            if len(self._pozostale[przedmiot.nazwa]) == 0:
+                                del self._pozostale[przedmiot.nazwa]
+                        self.interfejs(loc, init=True)
+                    elif wal == str(3):
+                        print("\nPrzedmiot został odłożony, wybierz inny\n")
+                        self.interfejs(loc, init=True)
+                    else:
+                        print("\nNie wybrano 1, 2, lub 3. Wychodzenie do menu...\n")
+                        self.interfejs(loc, init=True)
+
+            if a == 0:
+                print("\nDanego przedmiotu nie ma w ekwipunku.\n")
+                self.interfejs(loc)
 
 
 class Oselka:
     """
     Klasa Osełka posiadająca metodę naostrz
     """
+
     @staticmethod
     def naostrz(kontener: dict):
         """
@@ -694,34 +900,79 @@ class Oselka:
         Metoda podnosi statystyki obrażeń przedmiotu o 10% oraz zmienia jego nazwę oraz
         pole 'naostrzony'
         """
+        # Osełka - uzywane przedmioty dzialaja, nastepne rzeczy do zrobienia
+        # Stworzyc dwie lokacje - Khorinis/Gornicza Dolina
+        # Stworzyc interfejs bohatera pozwalajacy na przemieszcanie sie pomiedzy dwoma lokacjami, korzystanie z oselki
+        # ktora znajduje sie w dwoch lokacjach
+        # interfejs, ktory pozwala na odpalenie ekwipunku oraz na zebranie przedmiotow znajdujacych sie w danej lokacji
+        # jak ich wyrzucaniu w danej lokacji
+        kolejny_slownik = {}
+        przedmioty_w_uzyciu = [
+            Ekwipunek_Obiekt.w_uzyciu[key].nazwa for key in Ekwipunek_Obiekt.w_uzyciu
+        ]
+        ID = 0
         print("Oto wszystkie przedmioty w ekwipunku, które możesz naostrzyć:")
         for key, value in kontener.wyswietl().items():
             if isinstance(value[0], (BronJednoreczna, BronDwureczna)):
                 for i in value:
                     if not i.naostrzony:
-                        # tu zalozenie ze wszystkie przedmioty z listy maja dany atrybut
-                        print(key, "sztuk " + str(len(value)))
-                        break
+                        if i.nazwa not in przedmioty_w_uzyciu:
+                            # tu zalozenie ze wszystkie przedmioty z listy maja dany atrybut
+                            print(ID, key, "sztuk " + str(len(value)))
+                            kolejny_slownik[ID] = i.nazwa
+                            ID += 1
+                            break
+                        else:
+                            print(ID, key, "w użyciu")
+                            kolejny_slownik[ID] = i.nazwa + " w użyciu"
+                            ID += 1
+                            if len(value) - 1 == 0:
+                                break
+                            else:
+                                print(ID, key, "sztuk " + str(len(value) - 1))
+                                kolejny_slownik[ID] = i.nazwa
+                                ID += 1
+                                break
         val = input(
-            "Podaj nazwę przedmiotu, który chciałbyś naostrzyć lub wpisz 'wyjscie' by wyjść: "
+            "Podaj ID przedmiotu, który chciałbyś naostrzyć lub wpisz 'exit' by wyjść: "
         )
-        if val == "wyjscie":
+        if val == "exit":
             pass
         else:
-            if val in kontener.wyswietl():
-                if val.startswith("Naostrzony"):
-                    print("Danego przedmiotu nie da się naostrzyć ponownie")
+            if (
+                kolejny_slownik[int(val)].partition(" w użyciu")[0]
+                in kontener.wyswietl()
+            ):
+                if "w użyciu" in kolejny_slownik[int(val)]:
+                    item = kontener[
+                        kolejny_slownik[int(val)].partition(" w użyciu")[0]
+                    ][0]
+                    item._obrazenia *= 1.10
+                    math.ceil(item._obrazenia)
+                    del kontener[kolejny_slownik[int(val)].partition(" w użyciu")[0]][0]
+                    if (
+                        kontener[kolejny_slownik[int(val)].partition(" w użyciu")[0]]
+                        == []
+                    ):
+                        del kontener[
+                            kolejny_slownik[int(val)].partition(" w użyciu")[0]
+                        ]
+                    item._nazwa = (
+                        "Naostrzony "
+                        + kolejny_slownik[int(val)].partition(" w użyciu")[0]
+                    )
+                    item._naostrzony = True
+                    kontener.update({item._nazwa: [item]})
+                    print("Przedmiot naostrzono")
                     Oselka.naostrz(kontener)
                 else:
-                    # można naostrzyć używany przedmiot -> osełka nie wie, czy przedmiot jest
-                    # w użyciu, czy nie, natomiast jeśli przedmiot jest w użyciu, to trafi na
-                    # osełkę jako pierszy (zawsze)
-                    item = kontener[val][0]
+                    item = kontener[kolejny_slownik[int(val)]][-1]
                     item._obrazenia *= 1.10
-                    del kontener[val][0]
-                    if kontener[val] == []:
-                        del kontener[val]
-                    item._nazwa = "Naostrzony " + val
+                    math.ceil(item._obrazenia)
+                    del kontener[kolejny_slownik[int(val)]][-1]
+                    if kontener[kolejny_slownik[int(val)]] == []:
+                        del kontener[kolejny_slownik[int(val)]]
+                    item._nazwa = "Naostrzony " + kolejny_slownik[int(val)]
                     item._naostrzony = True
                     kontener.update({item._nazwa: [item]})
                     print("Przedmiot naostrzono")
@@ -736,6 +987,7 @@ class Bohater:
     Nowopowstała klasa Bohater będąca pośrednikiem między Podłogą, a Ekwipunkiem,
     posiadająca metodę podejrzyj.
     """
+
     # kwestia pojawienia się nowej klasy -> tj. klasy Bohater -> czy ekwipunek
     # powinien mieć metodę użyj, czy bohater?
     # czy ekwipunek powinien mieć kontener w użyciu, czy bohater właśnie?
@@ -749,32 +1001,53 @@ class Bohater:
     def podejrzyj(self, obiekt):
         przedmioty = obiekt.spojrz()
         a = przedmioty.copy()
+        print("Podniesiono:")
         for i in a:
             self.podnies(i)
-            # takie wywolanie metody dziala -> natomiast
-            # obiekt usun(i) nie : - )
-            # dlaczego??????????
+            print(i.nazwa)
             obiekt.zawartosc.remove(i)
 
     def podnies(self, przedmiot):
         Ekwipunek.dodaj(Ekwipunek_Obiekt, przedmiot)
 
 
-class Podloga:
+class Khorinis:
     """
-    Klasa Podłoga to zbiór wszystkich stworzonych obiektów typu Przedmiot. Posiada metodę spójrz oraz
+    Klasa Khorinis to zbiór wszystkich stworzonych obiektów typu Przedmiot. Posiada metodę spójrz oraz
     usuń.
     """
+
     def __init__(self):
         self.zawartosc = [
             BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, 50, False),
             BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, 50, False),
             BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, 50, False),
             BronJednoreczna("Kij z gwoździem", 7, {"Siła": 5}, 11, False),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, 11, False),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, 11, False),
             Luk("Zmyślony Łuk", 20, {"Zręczność": 20}, 100),
             Kusza("Zmyślona Kusza", 30, {"Zręczność": 50}, 80),
-            Pancerz("Zbroja strażnika", 1650, 55, 10, 25, 10),
-            Pancerz("Zbroja z pancerzy pełzaczy", 2400, 80, 15, 30, 10),
+            Pancerz(
+                "Zbroja strażnika",
+                1650,
+                {
+                    "Ochrona przed bronią": 55,
+                    "Ochrona przed strzałami": 10,
+                    "Ochrona przed ogniem": 25,
+                },
+                {"Siła": 5},
+            ),
+            Pancerz(
+                "Zbroja z pancerzy pełzaczy",
+                2400,
+                {
+                    "Ochrona przed bronią": 80,
+                    "Ochrona przed strzałami": 15,
+                    "Ochrona przed ogniem": 30,
+                    "Ochrona przed magia": 5,
+                },
+                {"Siła": 0},
+            ),
             Runa("Bryła lodu", 700, 3, {"Obrażenia": 3}, 50),
             Runa("Deszcz ognia", 1300, 5, {"Obrażenia": 13}, 100),
             Zwoj("Wymyślony Zwój", 20, 5, {"Leczenie": 15}),
@@ -782,13 +1055,11 @@ class Podloga:
                 "Dwór Irdorath",
                 0,
                 "Mam w dupie przeznaczenie.",
-                {"Potencjalne zdobycie wiedzy": 1},
             ),
             Pismo(
                 "Historia Jarkendaru",
                 0,
-                "\nCo robisz? Topisz złoto? \nNie, siekam cebulkę.",
-                "Potencjalne zdobyie wiedzy",
+                "Co robisz? Topisz złoto? Nie, siekam cebulkę.",
             ),
             Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
             Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
@@ -805,19 +1076,93 @@ class Podloga:
         # odpowiednik wyswietl, aka spojrz na podloge
         return self.zawartosc
 
-    def usun(self, przedmiot):
+
+class Gornicza_Dolina:
+    """
+    Klasa Khorinis to zbiór wszystkich stworzonych obiektów typu Przedmiot. Posiada metodę spójrz oraz
+    usuń.
+    """
+
+    def __init__(self):
+        self.zawartosc = [
+            BronJednoreczna(
+                "Szept Burzy z Gorniczej Doliny", 1360, {"Siła": 20}, 50, False
+            ),
+            BronJednoreczna("Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, 11, False),
+            BronJednoreczna("Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, 11, False),
+            Pancerz(
+                "Zbroja z pancerzy pełzaczy z Gorniczej Doliny",
+                2400,
+                {
+                    "Ochrona przed bronią": 80,
+                    "Ochrona przed strzałami": 15,
+                    "Ochrona przed ogniem": 30,
+                    "Ochrona przed magia": 5,
+                },
+                {"Siła": 0},
+            ),
+            Runa("Bryła lodu z Gorniczej Doliny", 700, 3, {"Obrażenia": 3}, 50),
+            Pismo(
+                "Dwór Irdorath z Gorniczej Doliny",
+                0,
+                "Mam w dupie przeznaczenie.",
+            ),
+            Pismo(
+                "Historia Jarkendaru z Gorniczej Doliny",
+                0,
+                "Co robisz? Topisz złoto? Nie, siekam cebulkę.",
+            ),
+            Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
+            Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
+        ]
+
+    def spojrz(self):
         """
-        Metoda usuwająca przedmiot z listy zawartość
+        Metoda zwracająca listę zawartość
         """
-        # to nie dziala z poziomu bohatera - DLACZEGO -  nie wiem
-        self.zawartosc.remove(przedmiot)
+        # odpowiednik wyswietl, aka spojrz na podloge
+        return self.zawartosc
+
 
 Ekwipunek_Obiekt = Ekwipunek()
 Oselka_Obiekt = Oselka()
 Bohater_Obiekt = Bohater()
-Podloga_Obiekt = Podloga()
-Bohater_Obiekt.podejrzyj(Podloga_Obiekt)
-Ekwipunek_Obiekt.uzyj()
-Ekwipunek_Obiekt.wyrzuc()
-Ekwipunek_Obiekt.wyswietl_sztuki()
-Oselka_Obiekt.naostrz(Ekwipunek_Obiekt._bronie)
+Khorinis_Obiekt = Khorinis()
+Gornicza_Dolina_Obiekt = Gornicza_Dolina()
+
+
+def interfejs_glowny(lokalizacja=None):
+    if lokalizacja is None:
+        val = input("\nWybierz lokalizacje\n1. Khorinis \n2. Gornicza Dolina")
+        if val == str(1):
+            lokalizacja = Khorinis_Obiekt
+            interfejs_glowny(lokalizacja)
+        elif val == str(2):
+            lokalizacja = Gornicza_Dolina_Obiekt
+            interfejs_glowny(lokalizacja)
+    val = input(
+        f"Znajdujesz się w {type(lokalizacja).__name__}. Wybierz co chcesz zrobić. \n 1. Zmień lokalizacje. \n 2. Zbierz przedmioty znajdujace sie w danej lokacji, \n 3. Odpal interfejs ekwipunku, \n 4. Odpal interfejs Osełki, \n 5. Wyświetl przedmioty w użyciu bohatera"
+    )
+    if val == str(1):
+        if lokalizacja == Khorinis_Obiekt:
+            lokalizacja = Gornicza_Dolina_Obiekt
+            interfejs_glowny(lokalizacja)
+        else:
+            lokalizacja = Khorinis_Obiekt
+            interfejs_glowny(lokalizacja)
+    if val == str(2):
+        Bohater_Obiekt.podejrzyj(lokalizacja)
+        print("\nPrzedmioty zostały podniesione. \n")
+        interfejs_glowny(lokalizacja)
+    if val == str(3):
+        Ekwipunek_Obiekt.interfejs(lokalizacja)
+        interfejs_glowny(lokalizacja)
+    if val == str(4):
+        Oselka_Obiekt.naostrz(Ekwipunek_Obiekt._bronie)
+        interfejs_glowny(lokalizacja)
+    if val == str(5):
+        Ekwipunek_Obiekt.wyswietl_w_uzyciu()
+        interfejs_glowny(lokalizacja)
+
+
+interfejs_glowny()
