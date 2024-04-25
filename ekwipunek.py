@@ -5,11 +5,15 @@ Wszystko w pierdolnikach jest oficjalne
 from abc import ABC
 from typing import Any
 import math
+import os
 
 # pylint: disable=missing-function-docstring, too-many-arguments, unnecessary-pass
 # pylint: disable=too-few-public-methods, protected-access, too-many-branches
 # pylint: disable=too-many-nested-blokalizacjaks, too-many-instance-attributes
 # pylint: disable=useless-parent-delegation
+
+clear = lambda: os.system('clear')
+
 class Przedmiot(ABC):
     """
     Base klasa, abstrakcyjna.
@@ -46,7 +50,6 @@ class Bron(Przedmiot):
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param wymagania: wymagane atrybuty do użycia danego przedmiotu
-    :param obrazenia: wartość zadawanych przez przedmiot obrażeń
     :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
@@ -58,26 +61,17 @@ class Bron(Przedmiot):
         nazwa: str,
         wartosc: int,
         wymagania: dict[str, int],
-        obrazenia: int | None = None,
-        efekt: dict[str, int] | None = None,
+        efekt: dict[str, int],
         zasieg: int | None = None
     ):
-        if efekt is None:
-            efekt = {"obrażenia": obrazenia}
-        elif efekt is dict and obrazenia is None:
-            efekt["obrażenia"] = obrazenia
         super().__init__(nazwa, wartosc, efekt)
         self._wymagania = wymagania
-        self._obrazenia = obrazenia
         self._zasieg = zasieg
+
 
     @property
     def wymagania(self):
         return self._wymagania
-
-    @property
-    def obrazenia(self):
-        return self._obrazenia
 
     @property
     def zasieg(self):
@@ -91,7 +85,6 @@ class BronBiala(Bron):
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param wymagania: wymagane atrybuty do użycia danego przedmiotu
-    :param obrazenia: wartość zadawanych przez przedmiot obrażeń
     :param naostrzony: informuje, czy dany przedmiot zostal naostrzony
     :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
@@ -104,14 +97,11 @@ class BronBiala(Bron):
         nazwa: str,
         wartosc: int,
         wymagania: dict[str, int],
-        obrazenia: int,
         naostrzony: bool,
+        efekt: dict[str, int],
         zasieg: int = 1,
-        efekt: dict[str, int] | None = None,
     ):
-        if efekt is None:
-            efekt = {"obrażenia": obrazenia}
-        super().__init__(nazwa, wartosc, wymagania, obrazenia, efekt, zasieg)
+        super().__init__(nazwa, wartosc, wymagania, efekt, zasieg)
         self._naostrzony = naostrzony
 
     @property
@@ -126,7 +116,6 @@ class BronDystansowa(Bron):
         :param nazwa: nazwa przedmiotu
         :param wartosc: wartość przedmiotu wyrażana w sztukach złota
         :param wymagania: wymagane atrybuty do użycia danego przedmiotu
-        :param obrazenia: wartość zadawanych przez przedmiot obrażeń
         :param zasieg: zasieg broni
         :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
             jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
@@ -137,13 +126,10 @@ class BronDystansowa(Bron):
         nazwa: str,
         wartosc: int,
         wymagania: dict[str, int],
-        obrazenia: int,
+        efekt: dict[str, int],
         zasieg: int = 1,
-        efekt: dict[str, int] | None = None,
     ):
-        if efekt is None:
-            efekt = {"obrażenia": obrazenia}
-        super().__init__(nazwa, wartosc, wymagania, obrazenia, efekt, zasieg)
+        super().__init__(nazwa, wartosc, wymagania, efekt, zasieg)
 
 
 class Luk(BronDystansowa):
@@ -406,68 +392,65 @@ class Pozostale(Przedmiot):
 
     pass
 
+class Kontener(dict):
+    """
+    Klasa bazowa kontener, ktora dziedziczy po dict i implementuje metode wyswietl
+    """
+    def wyswietl(self):
+        return self
 
-class Bronie(dict):
+
+class Bronie(Kontener):
     """
     Kontener na przedmioty klasy Broń posiadający metodę wyświetl
     """
 
-    def wyswietl(self):
-        return self
+    pass
 
 
-class Pancerze(dict):
+class Pancerze(Kontener):
     """
     Kontener na przedmioty klasy Pancerz posiadający metodę wyświetl
     """
 
-    def wyswietl(self):
-        return self
+    pass
 
 
-class PrzedmiotyMagiczne(dict):
+class PrzedmiotyMagiczne(Kontener):
     """
     Kontener na przedmioty klasy Magia posiadający metodę wyświetl
     """
 
-    def wyswietl(self):
-        return self
+    pass
 
 
-class Pisma(dict):
+class Pisma(Kontener):
     """
     Kontener na przedmioty klasy Pisma posiadający metodę wyświetl
     """
 
-    def wyswietl(self):
-        return self
+    pass
 
 
-class Artefakty(dict):
+class Artefakty(Kontener):
     """
     Kontener na przedmioty klasy Artefakt posiadający metodę wyświetl
     """
 
-    def wyswietl(self):
-        return self
+    pass
 
 
-class Zywnosc(dict):
+class Zywnosc(Kontener):
     """
     Kontener na przedmioty klasy Jedzenie posiadający metodę wyświetl
     """
+    pass
 
-    def wyswietl(self):
-        return self
-
-
-class Pozostalosci(dict):
+class Pozostalosci(Kontener):
     """
     Kontener na przedmioty klasy Pozostale posiadający metodę wyświetl
     """
-
-    def wyswietl(self):
-        return self
+    pass
 
 
 class Ekwipunek:
@@ -536,20 +519,19 @@ class Ekwipunek:
     def wyrzuc(self, item, lokalizacja):
         """
         Metoda wyrzuć wyrzucająca dany przedmiot z obiektu klasy Ekwipunek i zwracająca go
-        do obiektu klasy Podłoga.
+        do obiektu klasy lokalizacja.
 
         :param item: obiekt klasy Przedmiot
         :param lokalizacja: jest to lokalizacja, w ktorej uzytkownik obecnie sie znajduje,
             dla przykladu Khorinis lub Gornicza Dolina
         """
-
         lokalizacja.zawartosc.append(item)
         for k, v in self.w_uzyciu.copy().items():
             if item == v:
                 print(
                     "\nNie można usunąć przedmiotu, który jest w użyciu!\n"
                 )
-                self.interfejs(lokalizacja, init=True)
+                self.interfejs(lokalizacja)
         if isinstance(item, Bron):
             self._bronie[item.nazwa].remove(item)
             if len(self._bronie[item.nazwa]) == 0:
@@ -578,7 +560,7 @@ class Ekwipunek:
             self._pozostale[item.nazwa].remove(item)
             if len(self._pozostale[item.nazwa]) == 0:
                 del self._pozostale[item.nazwa]
-        self.interfejs(lokalizacja, init=True)
+        self.interfejs(lokalizacja)
 
     def uzyj(self, item, lokalizacja):
         """
@@ -599,14 +581,17 @@ class Ekwipunek:
         """
         if item.efekt:
             if isinstance(item, Pismo):
+                clear()
                 print(item.efekt)
             elif isinstance(item, Jedzenie):
+                clear()
                 print(item.efekt)
                 self._jedzenie[item.nazwa].remove(item)
                 if len(self._jedzenie[item.nazwa]) == 0:
                     del self._jedzenie[item.nazwa]
             elif isinstance(item, Magia):
                 if not item.krag:
+                    clear()
                     print("\nZwój został użyty!\n")
                     self._przedmioty_magiczne[item.nazwa].remove(
                         item
@@ -617,6 +602,7 @@ class Ekwipunek:
                     ):
                         del self._przedmioty_magiczne[item.nazwa]
                 else:
+                    clear()
                     self._w_uzyciu.update(
                         {
                             str(type(item)).split(sep=".")[
@@ -630,11 +616,13 @@ class Ekwipunek:
                 self._w_uzyciu.update(
                     {str(type(item)).split(sep=".")[1]: item}
                 )
+            clear()
             print("\nPrzedmiot został użyty!\n")
-            self.interfejs(lokalizacja, init=True)
+            self.interfejs(lokalizacja)
         else:
+            clear()
             print("\nPrzedmiotu nie da się użyć!\n")
-            self.interfejs(lokalizacja, init=True)
+            self.interfejs(lokalizacja)
 
     def zdejmij(self, item, lokalizacja, przedmioty_w_uzyciu):
         """
@@ -650,8 +638,9 @@ class Ekwipunek:
             if value == item:
                 del Ekwipunek_Obiekt.w_uzyciu[key]
                 przedmioty_w_uzyciu.remove(item.nazwa)
+        clear()
         print("\nPrzedmiot został zdjęty!\n")
-        self.interfejs(lokalizacja, init=True)
+        self.interfejs(lokalizacja)
 
     def dodaj(self, przedmiot):
         """
@@ -735,7 +724,7 @@ class Ekwipunek:
         for k, v in self.w_uzyciu.items():
             print(k, v.nazwa)
 
-    def interfejs(self, lokalizacja: object, init: bool = False):
+    def interfejs(self, lokalizacja: object):
         """
         Metoda interfejs, która odpowiada za interfejs ekwipunku. Wyświetla ona wszystkie
         przedmioty w ekwipunku, informuje użytkownika który przedmiot jest w użyciu, umożliwia
@@ -750,15 +739,14 @@ class Ekwipunek:
             metode.
 
         """
-        lokalizacja: Khorinis | Gornicza_Dolina = lokalizacja
+        lokalizacja: Lokalizacja = lokalizacja
         # slownik_interfejsu - {0: 'Szept Burzy z Gorniczej Doliny', 1: 'Mieczyk z Gorniczej Doliny',...}
         slownik_interfejsu: dict[int, str] = {}
         ID: int = 0
-        if init is False:
-            print(
-                "\nJeśli dany przedmiot można użyć, to przy jego ilości sztuk pojawi się kratka."
-                "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. "
-            )
+        print(
+            "Jeśli dany przedmiot można użyć, to przy jego ilości sztuk pojawi się kratka."
+            "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. \n"
+        )
 
         # key - Bronie
         # value - {'Szept Burzy z Gorniczej Doliny': [<__main__.BronJednoreczna object at 0x104360b80>],
@@ -785,6 +773,7 @@ class Ekwipunek:
             "Podaj ID przedmiotu, ktory chcesz wybrać, lub wpisz 'exit', by wyjść: "
         )
         if ID_przedmiotu == "exit":
+            clear()
             return 0
         else:
             try:
@@ -796,53 +785,56 @@ class Ekwipunek:
                 # 'Zmyślona Kusza': [<__main__.Kusza object at 0x10233c640>]}
                 for kontener, przedmioty in self.wyswietl_magazyn().items():
                     # slownik_interfejsu[int(ID_przedmiotu)] = 'Szept Burzy'
-                    if slownik_interfejsu[int(ID_przedmiotu)] in przedmioty:
+                    if (przedmiot := slownik_interfejsu[int(ID_przedmiotu)]) in przedmioty:
                         # item = <__main__.BronJednoreczna object at 0x1025a8b80>
-                        item: Przedmiot = self.wyswietl_magazyn()[kontener][slownik_interfejsu[int(ID_przedmiotu)]][
-                            0
-                        ]
+                        item: Przedmiot = self.wyswietl_magazyn()[kontener][przedmiot][0]
                         przedmioty_w_uzyciu: list[str] = [
-                            Ekwipunek_Obiekt.w_uzyciu[key].nazwa
-                            for key in Ekwipunek_Obiekt.w_uzyciu
+                            self.w_uzyciu[key].nazwa
+                            for key in self.w_uzyciu
                         ]
+                        clear()
                         print(f"Wybrany przedmiot:\n{item.nazwa}")
                         # wyprintowanie statystyk
                         for kk, vv in item.__dict__.items():
                             if kk != "_nazwa":
                                 print(kk.split("_")[1], vv)
                         # wybranie przedmiotu
-                        if slownik_interfejsu[int(ID_przedmiotu)] not in przedmioty_w_uzyciu:
-                            wybranie_przedmiotu: input = input(
-                                "Co chcesz zrobić z danym przedmiotem?\n1. Użyj\n2. Wyrzuć\n3. Wybierz inny przedmiot"
-                            )
-                        elif slownik_interfejsu[int(ID_przedmiotu)] in przedmioty_w_uzyciu:
-                            wybranie_przedmiotu: input = input(
-                                "Co chcesz zrobić z danym przedmiotem?\n1. Zdejmij\n2. Wyrzuć\n3. Wybierz inny przedmiot"
-                            )
+                        prompt = (
+                            "Co chcesz zrobić z danym przedmiotem?\n1. {warunek} \n2. Wyrzuć\n3. Wybierz inny przedmiot"
+                        )
+                        if przedmiot not in przedmioty_w_uzyciu:
+                            wybranie_przedmiotu: input = int(input(prompt.format(warunek="Załóż")))
+                        else:
+                            wybranie_przedmiotu: input = int(input(prompt.format(warunek="Zdejmij")))
                         if (
-                                wybranie_przedmiotu == str(1)
-                                and slownik_interfejsu[int(ID_przedmiotu)] not in przedmioty_w_uzyciu
+                                wybranie_przedmiotu == 1
+                                and przedmiot not in przedmioty_w_uzyciu
                         ):
                             self.uzyj(item, lokalizacja)
                         elif (
-                                wybranie_przedmiotu == str(1)
-                                and slownik_interfejsu[int(ID_przedmiotu)] in przedmioty_w_uzyciu
+                                wybranie_przedmiotu == 1
+                                and przedmiot in przedmioty_w_uzyciu
                         ):
                             self.zdejmij(item, lokalizacja, przedmioty_w_uzyciu)
-                        elif wybranie_przedmiotu == str(2):
+                        elif wybranie_przedmiotu == 2:
+                            clear()
                             self.wyrzuc(item, lokalizacja)
-                        elif wybranie_przedmiotu == str(3):
+                        elif wybranie_przedmiotu == 3:
+                            clear()
                             print("\nPrzedmiot został odłożony, wybierz inny\n")
-                            self.interfejs(lokalizacja, init=True)
+                            self.interfejs(lokalizacja)
                         else:
+                            clear()
                             print("\nNie wybrano 1, 2, lub 3. Wychodzenie do menu...\n")
-                            self.interfejs(lokalizacja, init=True)
+                            self.interfejs(lokalizacja)
             except KeyError:
+                clear()
                 print("\nDanego przedmiotu nie ma w ekwipunku.\n")
-                self.interfejs(lokalizacja, init=True)
+                self.interfejs(lokalizacja)
             except ValueError:
+                clear()
                 print("\nDanego przedmiotu nie ma w ekwipunku.\n")
-                self.interfejs(lokalizacja, init=True)
+                self.interfejs(lokalizacja)
 
 
 class Oselka:
@@ -891,7 +883,8 @@ class Oselka:
             "Podaj ID przedmiotu, który chciałbyś naostrzyć lub wpisz 'exit' by wyjść: "
         )
         if val == "exit":
-            pass
+            clear()
+            return 0
         else:
             if (
                 slownik_oselki[int(val)].partition(" w użyciu")[0]
@@ -901,8 +894,8 @@ class Oselka:
                     item = kontener[
                         slownik_oselki[int(val)].partition(" w użyciu")[0]
                     ][0]
-                    item._obrazenia *= 1.10
-                    math.ceil(item._obrazenia)
+                    item._efekt["obrazenia"] *= 1.10
+                    math.ceil(item._efekt["obrazenia"])
                     del kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]][0]
                     if (
                         kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
@@ -921,14 +914,17 @@ class Oselka:
                     Oselka.naostrz(kontener)
                 else:
                     item = kontener[slownik_oselki[int(val)]][-1]
-                    item._obrazenia *= 1.10
-                    math.ceil(item._obrazenia)
+                    item._efekt["obrazenia"] *= 1.10
+                    math.ceil(item._efekt["obrazenia"])
                     del kontener[slownik_oselki[int(val)]][-1]
                     if kontener[slownik_oselki[int(val)]] == []:
                         del kontener[slownik_oselki[int(val)]]
                     item._nazwa = "Naostrzony " + slownik_oselki[int(val)]
                     item._naostrzony = True
-                    kontener.update({item._nazwa: [item]})
+                    if item._nazwa not in kontener:
+                        kontener.update({item._nazwa: [item]})
+                    else:
+                        kontener[item._nazwa].append(item)
                     print("Przedmiot naostrzono")
                     Oselka.naostrz(kontener)
             else:
@@ -954,8 +950,17 @@ class Bohater:
     def podnies(self, przedmiot):
         Ekwipunek.dodaj(Ekwipunek_Obiekt, przedmiot)
 
+class Lokalizacja:
 
-class Khorinis:
+    def spojrz(self):
+        """
+        Metoda zwracająca listę zawartość
+        """
+        # odpowiednik wyswietl, aka spojrz na podloge
+        return self.zawartosc
+
+
+class Khorinis(Lokalizacja):
     """
     Klasa Khorinis to zbiór wszystkich stworzonych obiektów typu Przedmiot w Khorinis.
     Posiada metodę spójrz.
@@ -963,14 +968,14 @@ class Khorinis:
 
     def __init__(self):
         self.zawartosc = [
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, 50, False),
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, 50, False),
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, 50, False),
-            BronJednoreczna("Kij z gwoździem", 7, {"Siła": 5}, 11, False),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, 11, False),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, 11, False),
-            Luk("Zmyślony Łuk", 20, {"Zręczność": 20}, 100),
-            Kusza("Zmyślona Kusza", 30, {"Zręczność": 50}, 80),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, False, {"obrazenia": 50}),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, False, {"obrazenia": 50}),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, False, {"obrazenia": 50}),
+            BronJednoreczna("Kij z gwoździem", 7, {"Siła": 5}, False, {"obrazenia": 11}),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, False, {"obrazenia": 11}),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, False, {"obrazenia": 11}),
+            Luk("Zmyślony Łuk", 20, {"Zręczność": 20}, {"obrazenia": 100}),
+            Kusza("Zmyślona Kusza", 30, {"Zręczność": 50}, {"obrazenia": 80}),
             Pancerz(
                 "Zbroja strażnika",
                 1650,
@@ -1013,15 +1018,8 @@ class Khorinis:
             Pozostale("Grabie", 0, None),
         ]
 
-    def spojrz(self):
-        """
-        Metoda zwracająca listę zawartość
-        """
-        # odpowiednik wyswietl, aka spojrz na podloge
-        return self.zawartosc
 
-
-class Gornicza_Dolina:
+class Gornicza_Dolina(Lokalizacja):
     """
     Klasa Gornicza_Dolina to zbiór wszystkich stworzonych obiektów typu Przedmiot w Gorniczej Dolinie.
     Posiada metodę spójrz.
@@ -1030,10 +1028,10 @@ class Gornicza_Dolina:
     def __init__(self):
         self.zawartosc = [
             BronJednoreczna(
-                "Szept Burzy z Gorniczej Doliny", 1360, {"Siła": 20}, 50, False
+                "Szept Burzy z Gorniczej Doliny", 1360, {"Siła": 20}, False, {"obrazenia": 50}
             ),
-            BronJednoreczna("Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, 11, False),
-            BronJednoreczna("Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, 11, False),
+            BronJednoreczna("Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, False, {"obrazenia": 11}),
+            BronJednoreczna("Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, False, {"obrazenia": 11}),
             Pancerz(
                 "Zbroja z pancerzy pełzaczy z Gorniczej Doliny",
                 2400,
@@ -1045,7 +1043,7 @@ class Gornicza_Dolina:
                 },
                 {"Siła": 0},
             ),
-            Runa("Bryła lodu z Gorniczej Doliny", 700, 3, {"Obrażenia": 3}, 50),
+            Runa("Bryła lodu z Gorniczej Doliny", 700, 3, {"obrazenia": 3}, 50),
             Pismo(
                 "Dwór Irdorath z Gorniczej Doliny",
                 0,
@@ -1059,14 +1057,6 @@ class Gornicza_Dolina:
             Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
             Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
         ]
-
-    def spojrz(self):
-        """
-        Metoda zwracająca listę zawartość
-        """
-        # odpowiednik wyswietl, aka spojrz na podloge
-        return self.zawartosc
-
 
 Ekwipunek_Obiekt = Ekwipunek()
 Oselka_Obiekt = Oselka()
@@ -1083,44 +1073,68 @@ def interfejs_glowny(lokalizacja=None):
             dla przykladu Khorinis lub Gornicza Dolina
     """
     if lokalizacja is None:
-        val = input("\nWybierz lokalizacje\n1. Khorinis \n2. Gornicza Dolina")
-        if val == str(1):
-            lokalizacja = Khorinis_Obiekt
+        try:
+            val = int(input("\nWybierz lokalizacje\n1. Khorinis \n2. Gornicza Dolina"))
+            if val == 1:
+                lokalizacja = Khorinis_Obiekt
+                clear()
+                interfejs_glowny(lokalizacja)
+            elif val == 2:
+                lokalizacja = Gornicza_Dolina_Obiekt
+                clear()
+                interfejs_glowny(lokalizacja)
+            else:
+                clear()
+                print("Wybierz jeszcze raz")
+                interfejs_glowny(lokalizacja)
+        except ValueError:
+            clear()
+            print("Wybierz jeszcze raz.")
+            interfejs_glowny()
+    try:
+        val = int(input(
+            f"Znajdujesz się w {type(lokalizacja).__name__}. "
+            f"Wybierz co chcesz zrobić. "
+            f"\n 1. Zmień lokalizacje. "
+            f"\n 2. Zbierz przedmioty znajdujace sie w danej lokacji, "
+            f"\n 3. Odpal interfejs ekwipunku, "
+            f"\n 4. Odpal interfejs Osełki, "
+            f"\n 5. Wyświetl przedmioty w użyciu bohatera"
+        ))
+
+        if val == 1:
+            if lokalizacja == Khorinis_Obiekt:
+                lokalizacja = Gornicza_Dolina_Obiekt
+                clear()
+                interfejs_glowny(lokalizacja)
+            else:
+                lokalizacja = Khorinis_Obiekt
+                clear()
+                interfejs_glowny(lokalizacja)
+        if val == 2:
+            clear()
+            Bohater_Obiekt.podejrzyj(lokalizacja)
+            print("\nPrzedmioty zostały podniesione. \n")
             interfejs_glowny(lokalizacja)
-        elif val == str(2):
-            lokalizacja = Gornicza_Dolina_Obiekt
+        if val == 3:
+            clear()
+            Ekwipunek_Obiekt.interfejs(lokalizacja)
+            interfejs_glowny(lokalizacja)
+        if val == 4:
+            clear()
+            Oselka_Obiekt.naostrz(Ekwipunek_Obiekt._bronie)
+            interfejs_glowny(lokalizacja)
+        if val == 5:
+            clear()
+            Ekwipunek_Obiekt.wyswietl_w_uzyciu()
             interfejs_glowny(lokalizacja)
         else:
+            clear()
             print("Wybierz jeszcze raz")
             interfejs_glowny(lokalizacja)
-    val = input(
-        f"Znajdujesz się w {type(lokalizacja).__name__}. "
-        f"Wybierz co chcesz zrobić. "
-        f"\n 1. Zmień lokalizacje. "
-        f"\n 2. Zbierz przedmioty znajdujace sie w danej lokacji, "
-        f"\n 3. Odpal interfejs ekwipunku, "
-        f"\n 4. Odpal interfejs Osełki, "
-        f"\n 5. Wyświetl przedmioty w użyciu bohatera"
-    )
-    if val == str(1):
-        if lokalizacja == Khorinis_Obiekt:
-            lokalizacja = Gornicza_Dolina_Obiekt
-            interfejs_glowny(lokalizacja)
-        else:
-            lokalizacja = Khorinis_Obiekt
-            interfejs_glowny(lokalizacja)
-    if val == str(2):
-        Bohater_Obiekt.podejrzyj(lokalizacja)
-        print("\nPrzedmioty zostały podniesione. \n")
-        interfejs_glowny(lokalizacja)
-    if val == str(3):
-        Ekwipunek_Obiekt.interfejs(lokalizacja)
-        interfejs_glowny(lokalizacja)
-    if val == str(4):
-        Oselka_Obiekt.naostrz(Ekwipunek_Obiekt._bronie)
-        interfejs_glowny(lokalizacja)
-    if val == str(5):
-        Ekwipunek_Obiekt.wyswietl_w_uzyciu()
+    except ValueError:
+        clear()
+        print("Wybierz jeszcze raz")
         interfejs_glowny(lokalizacja)
 
 
