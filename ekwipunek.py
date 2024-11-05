@@ -2,18 +2,24 @@
 Konwencja -> Koncept jest taki, że w kodzie polskich znaków nie ma oprócz stringów.
 Wszystko w pierdolnikach jest oficjalne
 """
+
 from abc import ABC
 from typing import Any
 import math
 import os
 
 # pylint: disable=missing-function-docstring, too-many-arguments, unnecessary-pass
+# pylint: disable=too-many-positional-arguments
 # pylint: disable=too-few-public-methods, protected-access, too-many-branches
-# pylint: disable=too-many-nested-blokalizacjaks, too-many-instance-attributes
-# pylint: disable=useless-parent-delegation
+# pylint: disable=too-many-nested-blocks, too-many-instance-attributes
+# pylint: disable=useless-parent-delegation, too-many-lines, too-many-locals
 
-clear = lambda: os.system("clear")
-
+def clear():
+    """
+    Czyści terminal, macos/linux only.
+    (emulate terminal in output console)
+    """
+    return os.system("clear")
 
 class Przedmiot(ABC):
     """
@@ -21,7 +27,7 @@ class Przedmiot(ABC):
 
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -51,7 +57,7 @@ class Bron(Przedmiot):
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param wymagania: wymagane atrybuty do użycia danego przedmiotu
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     :param zasieg: zasieg broni
@@ -85,11 +91,11 @@ class BronBiala(Bron):
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param wymagania: wymagane atrybuty do użycia danego przedmiotu
-    :param naostrzony: informuje, czy dany przedmiot zostal naostrzony
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     :param zasieg: zasieg broni
+    :param naostrzony: informuje, czy dany przedmiot zostal naostrzony
     """
 
     def __init__(
@@ -97,9 +103,9 @@ class BronBiala(Bron):
         nazwa: str,
         wartosc: int,
         wymagania: dict[str, int],
-        naostrzony: bool,
         efekt: dict[str, int],
         zasieg: int = 1,
+        naostrzony: bool = False,
     ):
         super().__init__(nazwa, wartosc, wymagania, efekt, zasieg)
         self._naostrzony = naostrzony
@@ -117,7 +123,7 @@ class BronDystansowa(Bron):
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param wymagania: wymagane atrybuty do użycia danego przedmiotu
     :param zasieg: zasieg broni
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -173,7 +179,7 @@ class Pancerz(Przedmiot):
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param ochrona: ochrona przed bronią
     :param wymagania: wymagane atrybuty do użycia danego przedmiotu
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -216,7 +222,7 @@ class Magia(Przedmiot):
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param mana: koszt many
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -227,7 +233,7 @@ class Magia(Przedmiot):
         wartosc: int,
         mana: int,
         efekt: dict[str, Any],
-        wymagania: dict[str, int] = None,
+        wymagania: dict[str, int] | None = None,
     ):
         super().__init__(nazwa, wartosc, efekt)
         self._mana = mana
@@ -283,7 +289,7 @@ class Pismo(Przedmiot):
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
     :param tresc: treść danego pisma
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -313,7 +319,7 @@ class Jedzenie(Przedmiot):
 
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -333,7 +339,7 @@ class Artefakt(Przedmiot):
 
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -359,6 +365,10 @@ class Amulet(Artefakt):
 
 
 class Tablica(Artefakt):
+    """
+    Klasa Tablica dziedzicząca z klasy Artefakt
+    """
+
     def __init__(
         self,
         nazwa: str,
@@ -386,7 +396,7 @@ class Pozostale(Przedmiot):
 
     :param nazwa: nazwa przedmiotu
     :param wartosc: nazwa przedmiotu wyrażana w sztukach złota
-    :param efekt: efekt to zamiennik pola uzycie, jak rowniez bonusy ->
+    :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
     """
@@ -408,7 +418,8 @@ class Bronie(Kontener):
     Kontener na przedmioty klasy Broń posiadający metodę wyświetl
     """
 
-    pass
+    def __str__(self):
+        return type(self).__name__
 
 
 class Pancerze(Kontener):
@@ -485,6 +496,15 @@ class Ekwipunek:
         self._jedzenie = Zywnosc()
         self._pozostale = Pozostalosci()
         self._w_uzyciu = {}
+        self._mapping = {
+            self._bronie.__str__(): "bronie",
+            self._pancerze.__str__(): "pancerze",
+            self._przedmioty_magiczne.__str__(): "przedmioty_magiczne",
+            self._pisma.__str__(): "pisma",
+            self._artefakty.__str__(): "artefakty",
+            self._jedzenie.__str__(): "jedzenie",
+            self._pozostale.__str__(): "pozostale",
+        }
 
     @property
     def bronie(self):
@@ -533,12 +553,14 @@ class Ekwipunek:
         """
 
         # itertools,chain.from iterable
-        # ujednolicenie wartości w użyciu -> Każdy z tych kontenerów ma zawierać w sobie listę obiektów (nawet jeśli jest jeden), a nie sam obiekt
+        # ujednolicenie wartości w użyciu -> Każdy z tych kontenerów ma zawierać w sobie
+        # listę obiektów (nawet jeśli jest jeden), a nie sam obiekt
         # defaultdict - w użyciu żeby nie było ditem tylko default dictem
-        for k, v in self.w_uzyciu.items():
+        for _, v in self.w_uzyciu.items():
             if item == v:
                 print("\nNie można usunąć przedmiotu, który jest w użyciu!\n")
-        kontener = getattr(self, nazwa_kontenera)
+                return None
+        kontener = getattr(self, self._mapping[nazwa_kontenera])
         przedmioty = kontener[item.nazwa]
         if len(przedmioty) == 1:
             del kontener[item.nazwa]
@@ -677,13 +699,13 @@ class Ekwipunek:
         """
         # ZDEFINIUJ MAGAZYN W INICIE
         self._magazyn = {
-            "Bronie": self._bronie,
-            "Pancerze": self._pancerze,
-            "Przemioty Magiczne": self._przedmioty_magiczne,
-            "Pisma": self._pisma,
-            "Artefakty": self._artefakty,
-            "Jedzenie": self._jedzenie,
-            "Pozostałe": self._pozostale,
+            str(self._bronie): self._bronie,
+            str(self._pancerze): self._pancerze,
+            str(self._przedmioty_magiczne): self._przedmioty_magiczne,
+            str(self._pisma): self._pisma,
+            str(self._artefakty): self._artefakty,
+            str(self._jedzenie): self._jedzenie,
+            str(self._pozostale): self._pozostale,
         }
         return self.magazyn
 
@@ -715,20 +737,24 @@ class Ekwipunek:
             ID: int = 0
             print(
                 "Jeśli dany przedmiot można użyć, to przy jego ilości sztuk pojawi się kratka."
-                "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. \n"
+                "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. "
+                "\n"
             )
 
             # slownik interfejsu zdefiniowac tylko raz - tak jak wczesniej robilismy
             # i zrobic renderowanie tylko w petli
 
             # key - Bronie
-            # value - {'Szept Burzy z Gorniczej Doliny': [<__main__.BronJednoreczna object at 0x104360b80>],
+            # value - {'Szept Burzy z Gorniczej Doliny':
+            # [<__main__.BronJednoreczna object at 0x104360b80>],
             # 'Mieczyk z Gorniczej Doliny': [<__main__.BronJednoreczna object at 0x104360bb0>]}
             for value in self.wyswietl_magazyn().values():
                 # k - Gulasz Thekli
-                # v - [<__main__.Jedzenie object at 0x104360d60>, <__main__.Jedzenie object at 0x104360dc0>]
+                # v - [<__main__.Jedzenie object at 0x104360d60>,
+                # <__main__.Jedzenie object at 0x104360dc0>]
                 for k, v in value.items():
-                    # sprawdzam czy zbiory sie pokrywaja - jesli tak, to dany przedmiot jest w uzyciu
+                    # sprawdzam czy zbiory sie pokrywaja - jesli tak, to dany przedmiot jest
+                    # w uzyciu
                     if bool(set(v) & set(self.w_uzyciu.values())):
                         print(f"{ID} * " + k + "    #" + " sztuk " + str(len(v)))
                         slownik_interfejsu[ID] = k
@@ -751,30 +777,34 @@ class Ekwipunek:
             else:
                 try:
                     # kontener = 'Bronie'
-                    # przedmioty = {'Szept Burzy': [<__main__.BronJednoreczna object at 0x10233c550>,
-                    # <__main__.BronJednoreczna object at 0x10233c580>, <__main__.BronJednoreczna object at 0x10233c5b0>],
+                    # przedmioty = {'Szept Burzy':
+                    # [<__main__.BronJednoreczna object at 0x10233c550>,
+                    # <__main__.BronJednoreczna object at 0x10233c580>,
+                    # <__main__.BronJednoreczna object at 0x10233c5b0>],
                     # 'Kij z gwoździem': [<__main__.BronJednoreczna object at 0x10233c5e0>],
                     # 'Zmyślony Łuk': [<__main__.Luk object at 0x10233c610>],
                     # 'Zmyślona Kusza': [<__main__.Kusza object at 0x10233c640>]}
 
-                    # Walidacje robić przed - tzn sprawdzenie - nie muszę iterować następny raz po wyswietl_magazyn().items()
+                    # Walidacje robić przed - tzn sprawdzenie - nie muszę
+                    # iterować następny raz po wyswietl_magazyn().items()
 
                     for kontener, przedmioty in self.wyswietl_magazyn().items():
                         # slownik_interfejsu[int(ID_przedmiotu)] = 'Szept Burzy'
 
-                        #DODAĆ OBSŁUGĘ FLOAT'A
-
+                        # DODAĆ OBSŁUGĘ FLOAT'A
 
                         if (
                             przedmiot := slownik_interfejsu[int(ID_przedmiotu)]
                         ) in przedmioty:
                             # item = <__main__.BronJednoreczna object at 0x1025a8b80>
-                            item: Przedmiot = self.wyswietl_magazyn()[kontener][przedmiot][
-                                0
-                            ]
+                            item: Przedmiot = self.wyswietl_magazyn()[kontener][
+                                przedmiot
+                            ][0]
 
-                            # zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w uzyciu czy nie
-                            # od tego momentu powinienem wyeksportowac wszystko co jest dalej do innej funkcji (sprawdzic czy tam byloby GIT)
+                            # zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
+                            # uzyciu czy nie
+                            # od tego momentu powinienem wyeksportowac wszystko co jest dalej
+                            # do innej funkcji(sprawdzic czy tam byloby GIT)
 
                             przedmioty_w_uzyciu: list[str] = [
                                 self.w_uzyciu[key].nazwa for key in self.w_uzyciu
@@ -786,7 +816,8 @@ class Ekwipunek:
                                 if kk != "_nazwa":
                                     print(kk.split("_")[1], vv)
                             # wybranie przedmiotu
-                            prompt = "Co chcesz zrobić z danym przedmiotem?\n1. {warunek} \n2. Wyrzuć\n3. Wybierz inny przedmiot"
+                            prompt = ("Co chcesz zrobić z danym przedmiotem?"
+                                      "\n1. {warunek} \n2. Wyrzuć\n3. Wybierz inny przedmiot")
                             while True:
                                 try:
                                     if przedmiot not in przedmioty_w_uzyciu:
@@ -807,15 +838,20 @@ class Ekwipunek:
                                         wybranie_przedmiotu == 1
                                         and przedmiot in przedmioty_w_uzyciu
                                     ):
-                                        self.zdejmij(item, lokalizacja, przedmioty_w_uzyciu)
+                                        self.zdejmij(
+                                            item, lokalizacja, przedmioty_w_uzyciu
+                                        )
                                         break
                                     elif wybranie_przedmiotu == 2:
                                         clear()
-                                        self.wyrzuc(item, lokalizacja)
+                                        self.wyrzuc(item, kontener)
+                                        lokalizacja.zawartosc.append(item)
                                         break
                                     elif wybranie_przedmiotu == 3:
                                         clear()
-                                        print("\nPrzedmiot został odłożony, wybierz inny\n")
+                                        print(
+                                            "\nPrzedmiot został odłożony, wybierz inny\n"
+                                        )
                                         break
                                     else:
                                         clear()
@@ -869,11 +905,10 @@ class Oselka:
                             ID += 1
                             if len(value) - 1 == 0:
                                 break
-                            else:
-                                print(ID, key, "sztuk " + str(len(value) - 1))
-                                slownik_oselki[ID] = i.nazwa
-                                ID += 1
-                                break
+                            print(ID, key, "sztuk " + str(len(value) - 1))
+                            slownik_oselki[ID] = i.nazwa
+                            ID += 1
+                            break
         val = input(
             "Podaj ID przedmiotu, który chciałbyś naostrzyć lub wpisz 'exit' by wyjść: "
         )
@@ -881,47 +916,55 @@ class Oselka:
             clear()
             return 0
         else:
-            if (
-                slownik_oselki[int(val)].partition(" w użyciu")[0]
-                in kontener.wyswietl()
-            ):
-                if "w użyciu" in slownik_oselki[int(val)]:
-                    item = kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]][
-                        0
-                    ]
-                    item._efekt["obrazenia"] *= 1.10
-                    math.ceil(item._efekt["obrazenia"])
-                    del kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]][0]
-                    if (
-                        kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
-                        == []
-                    ):
-                        del kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
-                    item._nazwa = (
-                        "Naostrzony "
-                        + slownik_oselki[int(val)].partition(" w użyciu")[0]
-                    )
-                    item._naostrzony = True
-                    kontener.update({item._nazwa: [item]})
-                    print("Przedmiot naostrzono")
-                    Oselka.naostrz(kontener)
-                else:
-                    item = kontener[slownik_oselki[int(val)]][-1]
-                    item._efekt["obrazenia"] *= 1.10
-                    math.ceil(item._efekt["obrazenia"])
-                    del kontener[slownik_oselki[int(val)]][-1]
-                    if kontener[slownik_oselki[int(val)]] == []:
-                        del kontener[slownik_oselki[int(val)]]
-                    item._nazwa = "Naostrzony " + slownik_oselki[int(val)]
-                    item._naostrzony = True
-                    if item._nazwa not in kontener:
+            try:
+                if (
+                    slownik_oselki[int(val)].partition(" w użyciu")[0]
+                    in kontener.wyswietl()
+                ):
+                    if "w użyciu" in slownik_oselki[int(val)]:
+                        item = kontener[
+                            slownik_oselki[int(val)].partition(" w użyciu")[0]
+                        ][0]
+                        item._efekt["obrazenia"] *= 1.10
+                        math.ceil(item._efekt["obrazenia"])
+                        del kontener[
+                            slownik_oselki[int(val)].partition(" w użyciu")[0]
+                        ][0]
+                        if (
+                            kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
+                            == []
+                        ):
+                            del kontener[
+                                slownik_oselki[int(val)].partition(" w użyciu")[0]
+                            ]
+                        item._nazwa = (
+                            "Naostrzony "
+                            + slownik_oselki[int(val)].partition(" w użyciu")[0]
+                        )
+                        item._naostrzony = True
                         kontener.update({item._nazwa: [item]})
+                        print("Przedmiot naostrzono")
+                        Oselka.naostrz(kontener)
                     else:
-                        kontener[item._nazwa].append(item)
-                    print("Przedmiot naostrzono")
+                        item = kontener[slownik_oselki[int(val)]][-1]
+                        item._efekt["obrazenia"] *= 1.10
+                        math.ceil(item._efekt["obrazenia"])
+                        del kontener[slownik_oselki[int(val)]][-1]
+                        if kontener[slownik_oselki[int(val)]] == []:
+                            del kontener[slownik_oselki[int(val)]]
+                        item._nazwa = "Naostrzony " + slownik_oselki[int(val)]
+                        item._naostrzony = True
+                        if item._nazwa not in kontener:
+                            kontener.update({item._nazwa: [item]})
+                        else:
+                            kontener[item._nazwa].append(item)
+                        print("Przedmiot naostrzono")
+                        Oselka.naostrz(kontener)
+                else:
+                    print("Danego przedmiotu nie ma w ekwipunku!")
                     Oselka.naostrz(kontener)
-            else:
-                print("Danego przedmiotu nie ma w ekwipunku!")
+            except KeyError:
+                print("Przedmiot z danym ID nie istnieje")
                 Oselka.naostrz(kontener)
 
 
@@ -937,13 +980,13 @@ class Bohater:
             clear()
             for index, i in enumerate(podejrzyj_liste):
                 print(index, i.nazwa)
-            val = input(
+            val: str | int = input(
                 "Wpisz 'tak' by podnieść wszystkie przedmioty. Podaj ID przedmiotu, jeśli chcesz"
                 " podnieść pojedynczy przedmiot."
             )
-            #zmienic kolejnosc
+            # zmienic kolejnosc
             if val == "tak":
-                print("Podniesiono:")
+                print("Podniesiono wszystkie przedmioty")
                 for index, i in enumerate(podejrzyj_liste):
                     print(i.nazwa)
                     self.podnies(i)
@@ -951,8 +994,8 @@ class Bohater:
                 podejrzyj_liste.clear()
             elif val == "exit":
                 return 0
-            if val.split('.')[0].isdigit():
-                val = int(val.split('.')[0])
+            if val.split(".")[0].isdigit():
+                val = int(val.split(".")[0])
             else:
                 continue
             if val < len(podejrzyj_liste) and val >= 0:
@@ -971,6 +1014,10 @@ class Bohater:
 
 
 class Lokalizacja:
+    """
+    Klasa Lokalizacja.
+    """
+
     def __str__(self):
         return type(self).__name__
 
@@ -990,20 +1037,12 @@ class Khorinis(Lokalizacja):
 
     def __init__(self):
         self.zawartosc: list = [
-            BronJednoreczna(
-                "Szept Burzy", 1360, {"Siła": 20}, False, {"obrazenia": 50}
-            ),
-            BronJednoreczna(
-                "Szept Burzy", 1360, {"Siła": 20}, False, {"obrazenia": 50}
-            ),
-            BronJednoreczna(
-                "Szept Burzy", 1360, {"Siła": 20}, False, {"obrazenia": 50}
-            ),
-            BronJednoreczna(
-                "Kij z gwoździem", 7, {"Siła": 5}, False, {"obrazenia": 11}
-            ),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, False, {"obrazenia": 11}),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, False, {"obrazenia": 11}),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}),
+            BronJednoreczna("Kij z gwoździem", 7, {"Siła": 5}, {"obrazenia": 11}),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}),
             Luk("Zmyślony Łuk", 20, {"Zręczność": 20}, {"obrazenia": 100}),
             Kusza("Zmyślona Kusza", 30, {"Zręczność": 50}, {"obrazenia": 80}),
             Pancerz(
@@ -1049,10 +1088,10 @@ class Khorinis(Lokalizacja):
         ]
 
 
-class Gornicza_Dolina(Lokalizacja):
+class GorniczaDolina(Lokalizacja):
     """
-    Klasa Gornicza_Dolina to zbiór wszystkich stworzonych obiektów typu Przedmiot w Gorniczej Dolinie.
-    Posiada metodę spójrz.
+    Klasa GorniczaDolina to zbiór wszystkich stworzonych obiektów typu Przedmiot w Gorniczej
+    Dolinie. Posiada metodę spójrz.
     """
 
     def __init__(self):
@@ -1061,14 +1100,13 @@ class Gornicza_Dolina(Lokalizacja):
                 "Szept Burzy z Gorniczej Doliny",
                 1360,
                 {"Siła": 20},
-                False,
                 {"obrazenia": 50},
             ),
             BronJednoreczna(
-                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, False, {"obrazenia": 11}
+                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, {"obrazenia": 11}
             ),
             BronJednoreczna(
-                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, False, {"obrazenia": 11}
+                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, {"obrazenia": 11}
             ),
             Pancerz(
                 "Zbroja z pancerzy pełzaczy z Gorniczej Doliny",
@@ -1099,20 +1137,14 @@ class Gornicza_Dolina(Lokalizacja):
 
 class Jarkendar(Lokalizacja):
     """
-    Klasa Gornicza_Dolina to zbiór wszystkich stworzonych obiektów typu Przedmiot w Gorniczej Dolinie.
+    Klasa Jarkendar to zbiór wszystkich stworzonych obiektów typu Przedmiot w Gorniczej Dolinie.
     """
 
     def __init__(self):
         self.zawartosc = [
-            BronJednoreczna(
-                "Jaszczurzy miecz", 1360, {"Siła": 40}, False, {"obrazenia": 100}
-            ),
-            BronJednoreczna(
-                "Miecz z Jarkendaru", 25, {"Siła": 15}, False, {"obrazenia": 40}
-            ),
-            BronJednoreczna(
-                "Miecz z Jarkendaru", 25, {"Siła": 15}, False, {"obrazenia": 40}
-            ),
+            BronJednoreczna("Jaszczurzy miecz", 1360, {"Siła": 40}, {"obrazenia": 100}),
+            BronJednoreczna("Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}),
+            BronJednoreczna("Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}),
             Pancerz(
                 "Zbroja z Jaszczura",
                 3000,
@@ -1144,7 +1176,7 @@ Ekwipunek_Obiekt = Ekwipunek()
 Oselka_Obiekt = Oselka()
 Bohater_Obiekt = Bohater()
 Khorinis_Obiekt = Khorinis()
-Gornicza_Dolina_Obiekt = Gornicza_Dolina()
+Gornicza_Dolina_Obiekt = GorniczaDolina()
 Jarkendar_Obiekt = Jarkendar()
 
 
@@ -1160,14 +1192,13 @@ def modul():
             if val == 1:
                 aktualna_lokalizacja = Khorinis_Obiekt
                 return aktualna_lokalizacja
-            elif val == 2:
+            if val == 2:
                 aktualna_lokalizacja = Gornicza_Dolina_Obiekt
                 return aktualna_lokalizacja
-            elif val == 3:
+            if val == 3:
                 aktualna_lokalizacja = Jarkendar_Obiekt
                 return aktualna_lokalizacja
-            else:
-                raise ValueError("błędna wartość elo")
+            raise ValueError("błędna wartość elo")
         except ValueError:
             clear()
             print("Podaj wartość jeszcze raz")
@@ -1183,9 +1214,9 @@ def interfejs_glowny(lokalizacja=None):
 
     # DONE wymodulowanie tego
     # DONE dorobienie 3 lokalizacji - Jarkendar
-    # przerobic caly interfejs ekwipunku
+    # przerobic caly interfejs ekwipunku - DONE
     # nie podawac lokalizacji do metody wyrzuc, tylko podawac jej kontener, a metoda wyrzuc
-    # zwracala wyrzucany obiekt
+    # zwracala wyrzucany obiekt - DONE, ale jakim kosztem -> przekazywanie do lokalizacji znajduje się poza funkcją.
     # bohater -> dorobic mu funkcjonalnosc
     # while lokalizacja is None:
     #    lokalizacja = modul()
@@ -1201,11 +1232,14 @@ def interfejs_glowny(lokalizacja=None):
         False: ["Wybierz lokalizację początkową."],
     }
     while True:
-        prompt = [f"{f'Znajdujesz się w {str(lokalizacja)}.' if lokalizacja else ''} "
-                   f"Wybierz co chcesz zrobić. "]
+        prompt = [
+            f"{f'Znajdujesz się w {str(lokalizacja)}.' if lokalizacja else ''} "
+            f"Wybierz co chcesz zrobić. "
+        ]
         try:
             zmienna = [
-                f"{x}. {y}" for x, y in enumerate(input_interfejs[bool(lokalizacja)], start=1)
+                f"{x}. {y}"
+                for x, y in enumerate(input_interfejs[bool(lokalizacja)], start=1)
             ]
             val = int(input("\n".join([*prompt, *zmienna]).lstrip("\n ")))
             if val > len(zmienna) or val < 1:
@@ -1229,4 +1263,5 @@ interfejs_glowny(lokalizacja=None)
 
 # API - ladne punkty wejscia i wyjscia
 
-# przejscie przez restrukturyzacje kodu, tworzenie funkcji ladnych, zgrabnych i przyjemnych dla uzytkownika
+# przejscie przez restrukturyzacje kodu, tworzenie funkcji ladnych,
+# zgrabnych i przyjemnych dla uzytkownika
