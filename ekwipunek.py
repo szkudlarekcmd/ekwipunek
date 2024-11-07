@@ -5,7 +5,6 @@ Wszystko w pierdolnikach jest oficjalne
 
 from abc import ABC
 from typing import Any
-import math
 import os
 
 # pylint: disable=missing-function-docstring, too-many-arguments, unnecessary-pass
@@ -13,7 +12,9 @@ import os
 # pylint: disable=too-few-public-methods, protected-access, too-many-branches
 # pylint: disable=too-many-nested-blocks, too-many-instance-attributes
 # pylint: disable=useless-parent-delegation, too-many-lines, too-many-locals
+# pylint: disable=too-many-statements, inconsistent-return-statements
 
+# sprawdzić, dlaczego muszę wpisywać exit po parę razy (XD)
 def clear():
     """
     Czyści terminal, macos/linux only.
@@ -202,6 +203,7 @@ class Pancerz(Przedmiot):
             "Ochrona przed ogniem": 0,
         }
         default_ochrona.update(ochrona)
+        # to jest najprawdopodobniej niepotrzebne.
         self._ochrona = ochrona
         self._ochrona = default_ochrona
         self._wymagania = wymagania
@@ -427,7 +429,8 @@ class Pancerze(Kontener):
     Kontener na przedmioty klasy Pancerz posiadający metodę wyświetl
     """
 
-    pass
+    def __str__(self):
+        return type(self).__name__
 
 
 class PrzedmiotyMagiczne(Kontener):
@@ -435,15 +438,16 @@ class PrzedmiotyMagiczne(Kontener):
     Kontener na przedmioty klasy Magia posiadający metodę wyświetl
     """
 
-    pass
-
+    def __str__(self):
+        return type(self).__name__
 
 class Pisma(Kontener):
     """
     Kontener na przedmioty klasy Pisma posiadający metodę wyświetl
     """
 
-    pass
+    def __str__(self):
+        return type(self).__name__
 
 
 class Artefakty(Kontener):
@@ -451,7 +455,8 @@ class Artefakty(Kontener):
     Kontener na przedmioty klasy Artefakt posiadający metodę wyświetl
     """
 
-    pass
+    def __str__(self):
+        return type(self).__name__
 
 
 class Zywnosc(Kontener):
@@ -459,7 +464,8 @@ class Zywnosc(Kontener):
     Kontener na przedmioty klasy Jedzenie posiadający metodę wyświetl
     """
 
-    pass
+    def __str__(self):
+        return type(self).__name__
 
 
 class Pozostalosci(Kontener):
@@ -467,7 +473,8 @@ class Pozostalosci(Kontener):
     Kontener na przedmioty klasy Pozostale posiadający metodę wyświetl
     """
 
-    pass
+    def __str__(self):
+        return type(self).__name__
 
 
 class Ekwipunek:
@@ -496,14 +503,24 @@ class Ekwipunek:
         self._jedzenie = Zywnosc()
         self._pozostale = Pozostalosci()
         self._w_uzyciu = {}
+        # trochę słaby ten mapping, ale na ten moment nie mam lepszego pomysłu
         self._mapping = {
-            self._bronie.__str__(): "bronie",
-            self._pancerze.__str__(): "pancerze",
-            self._przedmioty_magiczne.__str__(): "przedmioty_magiczne",
-            self._pisma.__str__(): "pisma",
-            self._artefakty.__str__(): "artefakty",
-            self._jedzenie.__str__(): "jedzenie",
-            self._pozostale.__str__(): "pozostale",
+            str(self._bronie): "bronie",
+            str(self._pancerze): "pancerze",
+            str(self._przedmioty_magiczne): "przedmioty_magiczne",
+            str(self._pisma): "pisma",
+            str(self._artefakty): "artefakty",
+            str(self._jedzenie): "jedzenie",
+            str(self._pozostale): "pozostale",
+        }
+        self._magazyn = {
+            str(self._bronie): self._bronie,
+            str(self._pancerze): self._pancerze,
+            str(self._przedmioty_magiczne): self._przedmioty_magiczne,
+            str(self._pisma): self._pisma,
+            str(self._artefakty): self._artefakty,
+            str(self._jedzenie): self._jedzenie,
+            str(self._pozostale): self._pozostale,
         }
 
     @property
@@ -675,38 +692,11 @@ class Ekwipunek:
             else:
                 self._pozostale[przedmiot.nazwa].append(przedmiot)
 
-    # różne warianty metody wyświetl -> jestem otwarty na dyskusję
-    '''
-    def wyswietl_sztuki(self):
-        """
-        Defaultowe wyświetl, zmieniona nazwa ze względu na kilka wariantów:
-        Metoda ta wyświetla przedmioty w konwencji
-        kontener -> nazwa przedmiotu -> ilość sztuk w ekwipunku
-        """
-        stan = {}
-        for category, items in self.wyswietl_magazyn().items():
-            category_dict = {}
-            for item, item_list in items.items():
-                category_dict[item] = len(item_list)
-            stan[category] = category_dict
-        print(stan)
-        return stan
-    '''
-
     def wyswietl_magazyn(self):
         """
         Metoda zwracająca kontener magazyn
         """
         # ZDEFINIUJ MAGAZYN W INICIE
-        self._magazyn = {
-            str(self._bronie): self._bronie,
-            str(self._pancerze): self._pancerze,
-            str(self._przedmioty_magiczne): self._przedmioty_magiczne,
-            str(self._pisma): self._pisma,
-            str(self._artefakty): self._artefakty,
-            str(self._jedzenie): self._jedzenie,
-            str(self._pozostale): self._pozostale,
-        }
         return self.magazyn
 
     def wyswietl_w_uzyciu(self):
@@ -734,7 +724,7 @@ class Ekwipunek:
         while True:
             lokalizacja: Lokalizacja = lokalizacja
             slownik_interfejsu: dict[int, str] = {}
-            ID: int = 0
+            identifier: int = 0
             print(
                 "Jeśli dany przedmiot można użyć, to przy jego ilości sztuk pojawi się kratka."
                 "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. "
@@ -756,116 +746,114 @@ class Ekwipunek:
                     # sprawdzam czy zbiory sie pokrywaja - jesli tak, to dany przedmiot jest
                     # w uzyciu
                     if bool(set(v) & set(self.w_uzyciu.values())):
-                        print(f"{ID} * " + k + "    #" + " sztuk " + str(len(v)))
-                        slownik_interfejsu[ID] = k
-                        ID += 1
+                        print(f"{identifier} * " + k + "    #" + " sztuk " + str(len(v)))
+                        slownik_interfejsu[identifier] = k
+                        identifier += 1
                     # sprawdzam, czy dany przedmiot można użyć
                     elif v[0].efekt:
-                        print(f"{ID} " + k + "   #" + " sztuk " + str(len(v)))
-                        slownik_interfejsu[ID] = k
-                        ID += 1
+                        print(f"{identifier} " + k + "   #" + " sztuk " + str(len(v)))
+                        slownik_interfejsu[identifier] = k
+                        identifier += 1
                     else:
-                        print(f"{ID} " + k + " sztuk " + str(len(v)))
-                        slownik_interfejsu[ID] = k
-                        ID += 1
-            ID_przedmiotu = input(
+                        print(f"{identifier} " + k + " sztuk " + str(len(v)))
+                        slownik_interfejsu[identifier] = k
+                        identifier += 1
+            identifier_przedmiotu = input(
                 "Podaj ID przedmiotu, ktory chcesz wybrać, lub wpisz 'exit', by wyjść: "
             )
-            if ID_przedmiotu == "exit":
+            if identifier_przedmiotu == "exit":
                 clear()
                 return 0
-            else:
-                try:
-                    # kontener = 'Bronie'
-                    # przedmioty = {'Szept Burzy':
-                    # [<__main__.BronJednoreczna object at 0x10233c550>,
-                    # <__main__.BronJednoreczna object at 0x10233c580>,
-                    # <__main__.BronJednoreczna object at 0x10233c5b0>],
-                    # 'Kij z gwoździem': [<__main__.BronJednoreczna object at 0x10233c5e0>],
-                    # 'Zmyślony Łuk': [<__main__.Luk object at 0x10233c610>],
-                    # 'Zmyślona Kusza': [<__main__.Kusza object at 0x10233c640>]}
+            try:
+                # kontener = 'Bronie'
+                # przedmioty = {'Szept Burzy':
+                # [<__main__.BronJednoreczna object at 0x10233c550>,
+                # <__main__.BronJednoreczna object at 0x10233c580>,
+                # <__main__.BronJednoreczna object at 0x10233c5b0>],
+                # 'Kij z gwoździem': [<__main__.BronJednoreczna object at 0x10233c5e0>],
+                # 'Zmyślony Łuk': [<__main__.Luk object at 0x10233c610>],
+                # 'Zmyślona Kusza': [<__main__.Kusza object at 0x10233c640>]}
 
-                    # Walidacje robić przed - tzn sprawdzenie - nie muszę
-                    # iterować następny raz po wyswietl_magazyn().items()
+                # Walidacje robić przed - tzn sprawdzenie - nie muszę
+                # iterować następny raz po wyswietl_magazyn().items()
 
-                    for kontener, przedmioty in self.wyswietl_magazyn().items():
-                        # slownik_interfejsu[int(ID_przedmiotu)] = 'Szept Burzy'
+                for kontener, przedmioty in self.wyswietl_magazyn().items():
+                    # slownik_interfejsu[int(ID_przedmiotu)] = 'Szept Burzy'
 
-                        # DODAĆ OBSŁUGĘ FLOAT'A
+                    # DODAĆ OBSŁUGĘ FLOAT'A
 
-                        if (
-                            przedmiot := slownik_interfejsu[int(ID_przedmiotu)]
-                        ) in przedmioty:
-                            # item = <__main__.BronJednoreczna object at 0x1025a8b80>
-                            item: Przedmiot = self.wyswietl_magazyn()[kontener][
-                                przedmiot
-                            ][0]
+                    if (
+                        przedmiot := slownik_interfejsu[int(identifier_przedmiotu)]
+                    ) in przedmioty:
+                        # item = <__main__.BronJednoreczna object at 0x1025a8b80>
+                        item: Przedmiot = self.wyswietl_magazyn()[kontener][
+                            przedmiot
+                        ][0]
 
-                            # zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
-                            # uzyciu czy nie
-                            # od tego momentu powinienem wyeksportowac wszystko co jest dalej
-                            # do innej funkcji(sprawdzic czy tam byloby GIT)
+                        # zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
+                        # uzyciu czy nie
+                        # od tego momentu powinienem wyeksportowac wszystko co jest dalej
+                        # do innej funkcji(sprawdzic czy tam byloby GIT)
 
-                            przedmioty_w_uzyciu: list[str] = [
-                                self.w_uzyciu[key].nazwa for key in self.w_uzyciu
-                            ]
-                            clear()
-                            print(f"Wybrany przedmiot:\n{item.nazwa}")
-                            # wyprintowanie statystyk
-                            for kk, vv in item.__dict__.items():
-                                if kk != "_nazwa":
-                                    print(kk.split("_")[1], vv)
-                            # wybranie przedmiotu
-                            prompt = ("Co chcesz zrobić z danym przedmiotem?"
-                                      "\n1. {warunek} \n2. Wyrzuć\n3. Wybierz inny przedmiot")
-                            while True:
-                                try:
-                                    if przedmiot not in przedmioty_w_uzyciu:
-                                        wybranie_przedmiotu: input = int(
-                                            input(prompt.format(warunek="Użyj"))
-                                        )
-                                    else:
-                                        wybranie_przedmiotu: input = int(
-                                            input(prompt.format(warunek="Zdejmij"))
-                                        )
-                                    if (
-                                        wybranie_przedmiotu == 1
-                                        and przedmiot not in przedmioty_w_uzyciu
-                                    ):
-                                        self.uzyj(item, lokalizacja)
-                                        break
-                                    elif (
-                                        wybranie_przedmiotu == 1
-                                        and przedmiot in przedmioty_w_uzyciu
-                                    ):
-                                        self.zdejmij(
-                                            item, lokalizacja, przedmioty_w_uzyciu
-                                        )
-                                        break
-                                    elif wybranie_przedmiotu == 2:
-                                        clear()
-                                        self.wyrzuc(item, kontener)
-                                        lokalizacja.zawartosc.append(item)
-                                        break
-                                    elif wybranie_przedmiotu == 3:
-                                        clear()
-                                        print(
-                                            "\nPrzedmiot został odłożony, wybierz inny\n"
-                                        )
-                                        break
-                                    else:
-                                        clear()
-                                        print("Nie wpisano 1, 2, 3")
+                        przedmioty_w_uzyciu: list[str] = [
+                            self.w_uzyciu[key].nazwa for key in self.w_uzyciu
+                        ]
+                        clear()
+                        print(f"Wybrany przedmiot:\n{item.nazwa}")
+                        # wyprintowanie statystyk
+                        for kk, vv in item.__dict__.items():
+                            if kk != "_nazwa":
+                                print(kk.split("_")[1], vv)
+                        # wybranie przedmiotu
+                        prompt = ("Co chcesz zrobić z danym przedmiotem?"
+                                  "\n1. {warunek} \n2. Wyrzuć\n3. Wybierz inny przedmiot")
+                        while True:
+                            try:
+                                if przedmiot not in przedmioty_w_uzyciu:
+                                    wybranie_przedmiotu: input = int(
+                                        input(prompt.format(warunek="Użyj"))
+                                    )
+                                else:
+                                    wybranie_przedmiotu: input = int(
+                                        input(prompt.format(warunek="Zdejmij"))
+                                    )
+                                if (
+                                    wybranie_przedmiotu == 1
+                                    and przedmiot not in przedmioty_w_uzyciu
+                                ):
+                                    self.uzyj(item, lokalizacja)
                                     break
-                                except ValueError:
+                                if (
+                                    wybranie_przedmiotu == 1
+                                    and przedmiot in przedmioty_w_uzyciu
+                                ):
+                                    self.zdejmij(
+                                        item, lokalizacja, przedmioty_w_uzyciu
+                                    )
+                                    break
+                                if wybranie_przedmiotu == 2:
                                     clear()
-                                    print("Nie wpisano 1, 2, 3")
-                except KeyError:
-                    clear()
-                    print("\nDanego przedmiotu nie ma w ekwipunku.\n")
-                except ValueError:
-                    clear()
-                    print("\nDanego przedmiotu nie ma w ekwipunku.\n")
+                                    self.wyrzuc(item, kontener)
+                                    lokalizacja.zawartosc.append(item)
+                                    break
+                                if wybranie_przedmiotu == 3:
+                                    clear()
+                                    print(
+                                        "\nPrzedmiot został odłożony, wybierz inny\n"
+                                    )
+                                    break
+                                clear()
+                                print("Nie wpisano 1, 2, 3")
+                                break
+                            except ValueError:
+                                clear()
+                                print("Nie wpisano 1, 2, 3")
+            except KeyError:
+                clear()
+                print("\nDanego przedmiotu nie ma w ekwipunku.\n")
+            except ValueError:
+                clear()
+                print("\nDanego przedmiotu nie ma w ekwipunku.\n")
 
 
 class Oselka:
@@ -887,7 +875,7 @@ class Oselka:
         przedmioty_w_uzyciu = [
             Ekwipunek_Obiekt.w_uzyciu[key].nazwa for key in Ekwipunek_Obiekt.w_uzyciu
         ]
-        ID = 0
+        identifier = 0
         print("Oto wszystkie przedmioty w ekwipunku, które możesz naostrzyć:")
         for key, value in kontener.wyswietl().items():
             if isinstance(value[0], (BronJednoreczna, BronDwureczna)):
@@ -895,77 +883,74 @@ class Oselka:
                     if not i.naostrzony:
                         if i.nazwa not in przedmioty_w_uzyciu:
                             # tu zalozenie ze wszystkie przedmioty z listy maja dany atrybut
-                            print(ID, key, "sztuk " + str(len(value)))
-                            slownik_oselki[ID] = i.nazwa
-                            ID += 1
+                            print(identifier, key, "sztuk " + str(len(value)))
+                            slownik_oselki[identifier] = i.nazwa
+                            identifier += 1
                             break
-                        else:
-                            print(ID, key, "w użyciu")
-                            slownik_oselki[ID] = i.nazwa + " w użyciu"
-                            ID += 1
-                            if len(value) - 1 == 0:
-                                break
-                            print(ID, key, "sztuk " + str(len(value) - 1))
-                            slownik_oselki[ID] = i.nazwa
-                            ID += 1
+                        print(identifier, key, "w użyciu")
+                        slownik_oselki[identifier] = i.nazwa + " w użyciu"
+                        identifier += 1
+                        if len(value) - 1 == 0:
                             break
+                        print(identifier, key, "sztuk " + str(len(value) - 1))
+                        slownik_oselki[identifier] = i.nazwa
+                        identifier += 1
+                        break
         val = input(
             "Podaj ID przedmiotu, który chciałbyś naostrzyć lub wpisz 'exit' by wyjść: "
         )
         if val == "exit":
             clear()
             return 0
-        else:
-            try:
-                if (
-                    slownik_oselki[int(val)].partition(" w użyciu")[0]
-                    in kontener.wyswietl()
-                ):
-                    if "w użyciu" in slownik_oselki[int(val)]:
-                        item = kontener[
-                            slownik_oselki[int(val)].partition(" w użyciu")[0]
-                        ][0]
-                        item._efekt["obrazenia"] *= 1.10
-                        math.ceil(item._efekt["obrazenia"])
+        try:
+            if (
+                slownik_oselki[int(val)].partition(" w użyciu")[0]
+                in kontener.wyswietl()
+            ):
+                if "w użyciu" in slownik_oselki[int(val)]:
+                    item = kontener[
+                        slownik_oselki[int(val)].partition(" w użyciu")[0]
+                    ][0]
+                    item._efekt["obrazenia"] = round(item._efekt["obrazenia"] * 1.10)
+                    round(item._efekt["obrazenia"])
+                    del kontener[
+                        slownik_oselki[int(val)].partition(" w użyciu")[0]
+                    ][0]
+                    if (
+                        kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
+                        == []
+                    ):
                         del kontener[
                             slownik_oselki[int(val)].partition(" w użyciu")[0]
-                        ][0]
-                        if (
-                            kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
-                            == []
-                        ):
-                            del kontener[
-                                slownik_oselki[int(val)].partition(" w użyciu")[0]
-                            ]
-                        item._nazwa = (
-                            "Naostrzony "
-                            + slownik_oselki[int(val)].partition(" w użyciu")[0]
-                        )
-                        item._naostrzony = True
-                        kontener.update({item._nazwa: [item]})
-                        print("Przedmiot naostrzono")
-                        Oselka.naostrz(kontener)
-                    else:
-                        item = kontener[slownik_oselki[int(val)]][-1]
-                        item._efekt["obrazenia"] *= 1.10
-                        math.ceil(item._efekt["obrazenia"])
-                        del kontener[slownik_oselki[int(val)]][-1]
-                        if kontener[slownik_oselki[int(val)]] == []:
-                            del kontener[slownik_oselki[int(val)]]
-                        item._nazwa = "Naostrzony " + slownik_oselki[int(val)]
-                        item._naostrzony = True
-                        if item._nazwa not in kontener:
-                            kontener.update({item._nazwa: [item]})
-                        else:
-                            kontener[item._nazwa].append(item)
-                        print("Przedmiot naostrzono")
-                        Oselka.naostrz(kontener)
-                else:
-                    print("Danego przedmiotu nie ma w ekwipunku!")
+                        ]
+                    item._nazwa = (
+                        "Naostrzony "
+                        + slownik_oselki[int(val)].partition(" w użyciu")[0]
+                    )
+                    item._naostrzony = True
+                    kontener.update({item._nazwa: [item]})
+                    print("Przedmiot naostrzono")
                     Oselka.naostrz(kontener)
-            except KeyError:
-                print("Przedmiot z danym ID nie istnieje")
+                else:
+                    item = kontener[slownik_oselki[int(val)]][-1]
+                    item._efekt["obrazenia"] = round(item._efekt["obrazenia"] * 1.10)
+                    del kontener[slownik_oselki[int(val)]][-1]
+                    if kontener[slownik_oselki[int(val)]] == []:
+                        del kontener[slownik_oselki[int(val)]]
+                    item._nazwa = "Naostrzony " + slownik_oselki[int(val)]
+                    item._naostrzony = True
+                    if item._nazwa not in kontener:
+                        kontener.update({item._nazwa: [item]})
+                    else:
+                        kontener[item._nazwa].append(item)
+                    print("Przedmiot naostrzono")
+                    Oselka.naostrz(kontener)
+            else:
+                print("Danego przedmiotu nie ma w ekwipunku!")
                 Oselka.naostrz(kontener)
+        except KeyError:
+            print("Przedmiot z danym ID nie istnieje")
+            Oselka.naostrz(kontener)
 
 
 class Bohater:
@@ -998,7 +983,7 @@ class Bohater:
                 val = int(val.split(".")[0])
             else:
                 continue
-            if val < len(podejrzyj_liste) and val >= 0:
+            if 0 <= val < len(podejrzyj_liste):
                 przedmiocik = podejrzyj_liste.pop(val)
                 print("Podniesiono " + przedmiocik.nazwa)
                 self.podnies(przedmiocik)
@@ -1216,7 +1201,8 @@ def interfejs_glowny(lokalizacja=None):
     # DONE dorobienie 3 lokalizacji - Jarkendar
     # przerobic caly interfejs ekwipunku - DONE
     # nie podawac lokalizacji do metody wyrzuc, tylko podawac jej kontener, a metoda wyrzuc
-    # zwracala wyrzucany obiekt - DONE, ale jakim kosztem -> przekazywanie do lokalizacji znajduje się poza funkcją.
+    # zwracala wyrzucany obiekt - DONE, ale jakim kosztem ->
+    # przekazywanie do lokalizacji znajduje się poza funkcją.
     # bohater -> dorobic mu funkcjonalnosc
     # while lokalizacja is None:
     #    lokalizacja = modul()
