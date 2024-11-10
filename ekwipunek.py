@@ -4,8 +4,11 @@ Wszystko w pierdolnikach jest oficjalne
 """
 
 from abc import ABC
+from collections import defaultdict
 from typing import Any
 import os
+from itertools import chain
+
 
 # pylint: disable=missing-function-docstring, too-many-arguments, unnecessary-pass
 # pylint: disable=too-many-positional-arguments
@@ -14,13 +17,14 @@ import os
 # pylint: disable=useless-parent-delegation, too-many-lines, too-many-locals
 # pylint: disable=too-many-statements, inconsistent-return-statements
 
-# sprawdzić, dlaczego muszę wpisywać exit po parę razy (XD)
+
 def clear():
     """
     Czyści terminal, macos/linux only.
     (emulate terminal in output console)
     """
     return os.system("clear")
+
 
 class Przedmiot(ABC):
     """
@@ -441,6 +445,7 @@ class PrzedmiotyMagiczne(Kontener):
     def __str__(self):
         return type(self).__name__
 
+
 class Pisma(Kontener):
     """
     Kontener na przedmioty klasy Pisma posiadający metodę wyświetl
@@ -502,7 +507,7 @@ class Ekwipunek:
         self._artefakty = Artefakty()
         self._jedzenie = Zywnosc()
         self._pozostale = Pozostalosci()
-        self._w_uzyciu = {}
+        self._w_uzyciu = defaultdict(list)
         # trochę słaby ten mapping, ale na ten moment nie mam lepszego pomysłu
         self._mapping = {
             str(self._bronie): "bronie",
@@ -572,7 +577,10 @@ class Ekwipunek:
         # itertools,chain.from iterable
         # ujednolicenie wartości w użyciu -> Każdy z tych kontenerów ma zawierać w sobie
         # listę obiektów (nawet jeśli jest jeden), a nie sam obiekt
-        # defaultdict - w użyciu żeby nie było ditem tylko default dictem
+        # np żeby móc używać dwóch run naraz - bo przecież tak mozna - DONE, nie lista a tupla
+        #TODO: defaultdict
+
+        # TO JEST DO ZROBIENIA...
         for _, v in self.w_uzyciu.items():
             if item == v:
                 print("\nNie można usunąć przedmiotu, który jest w użyciu!\n")
@@ -611,19 +619,22 @@ class Ekwipunek:
                 if len(self._jedzenie[item.nazwa]) == 0:
                     del self._jedzenie[item.nazwa]
             elif isinstance(item, Magia):
-                if not item.krag:
+                if isinstance(item, Zwoj):
                     clear()
                     print("\nZwój został użyty!\n")
                     self._przedmioty_magiczne[item.nazwa].remove(item)
                     if len(self._przedmioty_magiczne[item.nazwa]) == 0:
                         del self._przedmioty_magiczne[item.nazwa]
                 else:
-                    clear()
-                    self._w_uzyciu.update({str(type(item)).split(sep=".")[1]: item})
+                    if type(item).__name__ not in self._w_uzyciu.keys():
+                        clear()
+                        self._w_uzyciu.update({type(item).__name__: (item,)})
+                    else:
+                        self._w_uzyciu[type(item).__name__] += (item,)
             elif isinstance(item, Pozostale):
                 pass
             else:
-                self._w_uzyciu.update({str(type(item)).split(sep=".")[1]: item})
+                self._w_uzyciu.update({type(item).__name__: (item,)})
             clear()
             print("\nPrzedmiot został użyty!\n")
             self.interfejs(lokalizacja)
@@ -643,9 +654,16 @@ class Ekwipunek:
             znajdujących się w użyciu
         """
         for key, value in Ekwipunek_Obiekt.w_uzyciu.copy().items():
-            if value == item:
-                del Ekwipunek_Obiekt.w_uzyciu[key]
-                przedmioty_w_uzyciu.remove(item.nazwa)
+            for i in value:
+                if i == item:
+                    Ekwipunek_Obiekt.w_uzyciu[key] = list(
+                        Ekwipunek_Obiekt.w_uzyciu[key]
+                    )
+                    Ekwipunek_Obiekt.w_uzyciu[key].remove(item)
+                    tuple(Ekwipunek_Obiekt.w_uzyciu[key])
+                    if len(value) == 1:
+                        del Ekwipunek_Obiekt.w_uzyciu[key]
+                    przedmioty_w_uzyciu.remove(item.nazwa)
         clear()
         print("\nPrzedmiot został zdjęty!\n")
         self.interfejs(lokalizacja)
@@ -696,7 +714,6 @@ class Ekwipunek:
         """
         Metoda zwracająca kontener magazyn
         """
-        # ZDEFINIUJ MAGAZYN W INICIE
         return self.magazyn
 
     def wyswietl_w_uzyciu(self):
@@ -704,7 +721,8 @@ class Ekwipunek:
         Metoda wyświetlająca przedmioty w użyciu
         """
         for k, v in self.w_uzyciu.items():
-            print(k, v.nazwa)
+            for v in v:
+                print(k, v.nazwa)
 
     def interfejs(self, lokalizacja: object):
         """
@@ -721,19 +739,17 @@ class Ekwipunek:
             metode.
 
         """
+        slownik_interfejsu: dict[int, str] = {}
+        print(
+            "Jeśli dany przedmiot można użyć, to przy jego ilości sztuk pojawi się kratka."
+            "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. "
+            "\n"
+        )
         while True:
             lokalizacja: Lokalizacja = lokalizacja
-            slownik_interfejsu: dict[int, str] = {}
             identifier: int = 0
-            print(
-                "Jeśli dany przedmiot można użyć, to przy jego ilości sztuk pojawi się kratka."
-                "\nJeśli dany przedmiot znajduje się w użyciu, to znajduje sie przy nim gwiazdka. "
-                "\n"
-            )
-
             # slownik interfejsu zdefiniowac tylko raz - tak jak wczesniej robilismy
-            # i zrobic renderowanie tylko w petli
-
+            # i zrobic renderowanie tylko w petli - imo DONE
             # key - Bronie
             # value - {'Szept Burzy z Gorniczej Doliny':
             # [<__main__.BronJednoreczna object at 0x104360b80>],
@@ -745,8 +761,15 @@ class Ekwipunek:
                 for k, v in value.items():
                     # sprawdzam czy zbiory sie pokrywaja - jesli tak, to dany przedmiot jest
                     # w uzyciu
-                    if bool(set(v) & set(self.w_uzyciu.values())):
-                        print(f"{identifier} * " + k + "    #" + " sztuk " + str(len(v)))
+                    object_list = list(
+                        chain.from_iterable(list(self.w_uzyciu.values()))
+                    )
+                    if len(self.w_uzyciu.values()) > 0 and bool(
+                        set(v) & set(object_list)
+                    ):
+                        print(
+                            f"{identifier} * " + k + "    #" + " sztuk " + str(len(v))
+                        )
                         slownik_interfejsu[identifier] = k
                         identifier += 1
                     # sprawdzam, czy dany przedmiot można użyć
@@ -763,7 +786,7 @@ class Ekwipunek:
             )
             if identifier_przedmiotu == "exit":
                 clear()
-                return 0
+                break
             try:
                 # kontener = 'Bronie'
                 # przedmioty = {'Szept Burzy':
@@ -774,86 +797,85 @@ class Ekwipunek:
                 # 'Zmyślony Łuk': [<__main__.Luk object at 0x10233c610>],
                 # 'Zmyślona Kusza': [<__main__.Kusza object at 0x10233c640>]}
 
-                # Walidacje robić przed - tzn sprawdzenie - nie muszę
+                #TODO: Walidacje robić przed - tzn sprawdzenie - nie muszę
                 # iterować następny raz po wyswietl_magazyn().items()
 
                 for kontener, przedmioty in self.wyswietl_magazyn().items():
                     # slownik_interfejsu[int(ID_przedmiotu)] = 'Szept Burzy'
 
-                    # DODAĆ OBSŁUGĘ FLOAT'A
+                    #TODO: DODAĆ OBSŁUGĘ FLOAT'A - po co?
 
                     if (
                         przedmiot := slownik_interfejsu[int(identifier_przedmiotu)]
                     ) in przedmioty:
                         # item = <__main__.BronJednoreczna object at 0x1025a8b80>
-                        item: Przedmiot = self.wyswietl_magazyn()[kontener][
-                            przedmiot
-                        ][0]
-
-                        # zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
-                        # uzyciu czy nie
-                        # od tego momentu powinienem wyeksportowac wszystko co jest dalej
-                        # do innej funkcji(sprawdzic czy tam byloby GIT)
-
-                        przedmioty_w_uzyciu: list[str] = [
-                            self.w_uzyciu[key].nazwa for key in self.w_uzyciu
+                        item: Przedmiot = self.wyswietl_magazyn()[kontener][przedmiot][
+                            0
                         ]
-                        clear()
-                        print(f"Wybrany przedmiot:\n{item.nazwa}")
-                        # wyprintowanie statystyk
-                        for kk, vv in item.__dict__.items():
-                            if kk != "_nazwa":
-                                print(kk.split("_")[1], vv)
-                        # wybranie przedmiotu
-                        prompt = ("Co chcesz zrobić z danym przedmiotem?"
-                                  "\n1. {warunek} \n2. Wyrzuć\n3. Wybierz inny przedmiot")
-                        while True:
-                            try:
-                                if przedmiot not in przedmioty_w_uzyciu:
-                                    wybranie_przedmiotu: input = int(
-                                        input(prompt.format(warunek="Użyj"))
-                                    )
-                                else:
-                                    wybranie_przedmiotu: input = int(
-                                        input(prompt.format(warunek="Zdejmij"))
-                                    )
-                                if (
-                                    wybranie_przedmiotu == 1
-                                    and przedmiot not in przedmioty_w_uzyciu
-                                ):
-                                    self.uzyj(item, lokalizacja)
-                                    break
-                                if (
-                                    wybranie_przedmiotu == 1
-                                    and przedmiot in przedmioty_w_uzyciu
-                                ):
-                                    self.zdejmij(
-                                        item, lokalizacja, przedmioty_w_uzyciu
-                                    )
-                                    break
-                                if wybranie_przedmiotu == 2:
-                                    clear()
-                                    self.wyrzuc(item, kontener)
-                                    lokalizacja.zawartosc.append(item)
-                                    break
-                                if wybranie_przedmiotu == 3:
-                                    clear()
-                                    print(
-                                        "\nPrzedmiot został odłożony, wybierz inny\n"
-                                    )
-                                    break
-                                clear()
-                                print("Nie wpisano 1, 2, 3")
-                                break
-                            except ValueError:
-                                clear()
-                                print("Nie wpisano 1, 2, 3")
+
+                        #TODO: zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
+                        # uzyciu czy nie - do przegadania czy jest to potrzebne.
+
+
+                        # od tego momentu powinienem wyeksportowac wszystko co jest dalej
+                        # do innej funkcji(sprawdzic czy tam byloby GIT) - DONE
+                        self.podinterfejs(item, lokalizacja, przedmiot, kontener)
+                        return 0
             except KeyError:
                 clear()
                 print("\nDanego przedmiotu nie ma w ekwipunku.\n")
             except ValueError:
                 clear()
                 print("\nDanego przedmiotu nie ma w ekwipunku.\n")
+
+    def podinterfejs(self, item, lokalizacja, przedmiot, kontener):
+
+        przedmioty_w_uzyciu: list[str, Any] = [
+            obj.nazwa for nazwa_obj in self.w_uzyciu.values() for obj in nazwa_obj
+        ]
+        clear()
+        print(f"Wybrany przedmiot:\n{item.nazwa}")
+        # wyprintowanie statystyk
+        for kk, vv in item.__dict__.items():
+            if kk != "_nazwa":
+                print(kk.split("_")[1], vv)
+        # wybranie przedmiotu
+        prompt = (
+            "Co chcesz zrobić z danym przedmiotem?"
+            "\n1. {warunek} \n2. Wyrzuć\n3. Wybierz inny przedmiot"
+        )
+        while True:
+            try:
+                if przedmiot not in przedmioty_w_uzyciu:
+                    wybranie_przedmiotu: input = int(
+                        input(prompt.format(warunek="Użyj"))
+                    )
+                else:
+                    wybranie_przedmiotu: input = int(
+                        input(prompt.format(warunek="Zdejmij"))
+                    )
+                if wybranie_przedmiotu == 1 and przedmiot not in przedmioty_w_uzyciu:
+                    self.uzyj(item, lokalizacja)
+                    break
+                if wybranie_przedmiotu == 1 and przedmiot in przedmioty_w_uzyciu:
+                    self.zdejmij(item, lokalizacja, przedmioty_w_uzyciu)
+                    break
+                if wybranie_przedmiotu == 2:
+                    clear()
+                    self.wyrzuc(item, kontener)
+                    lokalizacja.zawartosc.append(item)
+                    break
+                if wybranie_przedmiotu == 3:
+                    clear()
+                    print("\nPrzedmiot został odłożony, wybierz inny\n")
+                    break
+                clear()
+                print("Nie wpisano 1, 2, 3")
+                break
+            except ValueError:
+                clear()
+                print("Nie wpisano 1, 2, 3")
+                break
 
 
 class Oselka:
@@ -872,8 +894,10 @@ class Oselka:
         :param kontener: kontener danego przedmiotu, np. bronie
         """
         slownik_oselki = {}
-        przedmioty_w_uzyciu = [
-            Ekwipunek_Obiekt.w_uzyciu[key].nazwa for key in Ekwipunek_Obiekt.w_uzyciu
+        przedmioty_w_uzyciu: list[str, Any] = [
+            obj.nazwa
+            for nazwa_obj in Ekwipunek_Obiekt.w_uzyciu.values()
+            for obj in nazwa_obj
         ]
         identifier = 0
         print("Oto wszystkie przedmioty w ekwipunku, które możesz naostrzyć:")
@@ -908,21 +932,17 @@ class Oselka:
                 in kontener.wyswietl()
             ):
                 if "w użyciu" in slownik_oselki[int(val)]:
-                    item = kontener[
-                        slownik_oselki[int(val)].partition(" w użyciu")[0]
-                    ][0]
+                    item = kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]][
+                        0
+                    ]
                     item._efekt["obrazenia"] = round(item._efekt["obrazenia"] * 1.10)
                     round(item._efekt["obrazenia"])
-                    del kontener[
-                        slownik_oselki[int(val)].partition(" w użyciu")[0]
-                    ][0]
+                    del kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]][0]
                     if (
                         kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
                         == []
                     ):
-                        del kontener[
-                            slownik_oselki[int(val)].partition(" w użyciu")[0]
-                        ]
+                        del kontener[slownik_oselki[int(val)].partition(" w użyciu")[0]]
                     item._nazwa = (
                         "Naostrzony "
                         + slownik_oselki[int(val)].partition(" w użyciu")[0]
@@ -969,7 +989,6 @@ class Bohater:
                 "Wpisz 'tak' by podnieść wszystkie przedmioty. Podaj ID przedmiotu, jeśli chcesz"
                 " podnieść pojedynczy przedmiot."
             )
-            # zmienic kolejnosc
             if val == "tak":
                 print("Podniesiono wszystkie przedmioty")
                 for index, i in enumerate(podejrzyj_liste):
@@ -1203,7 +1222,7 @@ def interfejs_glowny(lokalizacja=None):
     # nie podawac lokalizacji do metody wyrzuc, tylko podawac jej kontener, a metoda wyrzuc
     # zwracala wyrzucany obiekt - DONE, ale jakim kosztem ->
     # przekazywanie do lokalizacji znajduje się poza funkcją.
-    # bohater -> dorobic mu funkcjonalnosc
+    #TODO: bohater -> dorobic mu funkcjonalnosc - w jaki sposób?
     # while lokalizacja is None:
     #    lokalizacja = modul()
 
