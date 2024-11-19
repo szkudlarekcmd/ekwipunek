@@ -3,12 +3,13 @@ Konwencja -> Koncept jest taki, że w kodzie polskich znaków nie ma oprócz str
 Wszystko w pierdolnikach jest oficjalne
 """
 
+import platform
 from abc import ABC
 from collections import defaultdict
 from typing import Any
 import os
 from itertools import chain
-
+from typed_dicts import *
 
 # pylint: disable=missing-function-docstring, too-many-arguments, unnecessary-pass
 # pylint: disable=too-many-positional-arguments
@@ -16,14 +17,21 @@ from itertools import chain
 # pylint: disable=too-many-nested-blocks, too-many-instance-attributes
 # pylint: disable=useless-parent-delegation, too-many-lines, too-many-locals
 # pylint: disable=too-many-statements, inconsistent-return-statements
+# podziel cały ekwipunek na podpliki, podziel klasy gdzie trzeba
+# wydziel plik ekwipunek
+# wydziel plik bohater
+# w mainie TYLKO pętla główna.
 
 
 def clear():
     """
-    Czyści terminal, macos/linux only.
+    Czyści terminal.
     (emulate terminal in output console)
     """
-    return os.system("clear")
+    if platform.system() == "Windows":
+        return os.system("cls")
+    else:
+        return os.system("clear")
 
 
 class Przedmiot(ABC):
@@ -73,7 +81,7 @@ class Bron(Przedmiot):
         nazwa: str,
         wartosc: int,
         wymagania: dict[str, int],
-        efekt: dict[str, int],
+        efekt: BronEfekt,
         zasieg: int | None = None,
     ):
         super().__init__(nazwa, wartosc, efekt)
@@ -109,7 +117,11 @@ class BronBiala(Bron):
         wartosc: int,
         wymagania: dict[str, int],
         efekt: dict[str, int],
-        zasieg: int = 1,
+        # każdy obiekt powinien posiadać własny, niekoniecznie unikalny
+        # zasięg, czyli lepiej nie traktować tego jako default
+        # można obsłużyć default - None -> dla broni zasięgowej
+        # jeśli None to zasięg bbbb duży - DONE
+        zasieg: int,
         naostrzony: bool = False,
     ):
         super().__init__(nazwa, wartosc, wymagania, efekt, zasieg)
@@ -122,7 +134,7 @@ class BronBiala(Bron):
 
 class BronDystansowa(Bron):
     """
-    Klasa broni białej.
+    Klasa broni dystansowej.
 
     :param nazwa: nazwa przedmiotu
     :param wartosc: wartość przedmiotu wyrażana w sztukach złota
@@ -139,7 +151,7 @@ class BronDystansowa(Bron):
         wartosc: int,
         wymagania: dict[str, int],
         efekt: dict[str, int],
-        zasieg: int = 1,
+        zasieg: int | None = None,
     ):
         super().__init__(nazwa, wartosc, wymagania, efekt, zasieg)
 
@@ -193,28 +205,14 @@ class Pancerz(Przedmiot):
         self,
         nazwa: str,
         wartosc: int,
-        ochrona: dict[str, int],
-        wymagania: dict[str, int],
-        efekt: dict[str, int] | None = None,
+        # pole efekt nie musi być tylko ochroną... może być to bonus
+        # w postaci many
+        # pomysł - zmergować pola ochrona oraz efekt (?) - Done
+        efekt: PancerzEfekt | dict[str, Any],
+        wymagania: dict[str, int] | None = None,
     ):
-        if efekt is None:
-            efekt = ochrona
         super().__init__(nazwa, wartosc, efekt)
-        default_ochrona: dict[str, int] = {
-            "Ochrona przed bronią": 0,
-            "Ochrona przed strzałami": 0,
-            "Ochrona przed magią": 0,
-            "Ochrona przed ogniem": 0,
-        }
-        default_ochrona.update(ochrona)
-        # to jest najprawdopodobniej niepotrzebne.
-        self._ochrona = ochrona
-        self._ochrona = default_ochrona
         self._wymagania = wymagania
-
-    @property
-    def ochrona(self):
-        return self._ochrona
 
     @property
     def wymagania(self):
@@ -241,18 +239,28 @@ class Magia(Przedmiot):
         efekt: dict[str, Any],
         wymagania: dict[str, int] | None = None,
     ):
+        def_dict: dict[str, Any] = {"Koszt many": mana}
         super().__init__(nazwa, wartosc, efekt)
-        self._mana = mana
+        self._wymagania = wymagania
+        # nie warunkować w ten sposób wymagań - a co jeśli zrobię else?
+        # wymagania zrobić jako default pole, w którym ZAWSZE przechowywany jest koszt many
+        # ale mogą być dodane dodatkowe parametry w postaci ni etylko kosztu many, ale też np
+        # punkty życia - DONE
         if wymagania is None:
-            self._wymagania = {"Koszt many": self.mana}
-
-    @property
-    def mana(self):
-        return self._mana
+            self._wymagania = def_dict
+        else:
+            self._wymagania.update(def_dict)
+        # self._wymagania.update(wymagania)
+        # typed dict
+        # mozna usunac pole mana z 259 i tylko zostawic je w wymaganiach - DONE
 
     @property
     def wymagania(self):
         return self._wymagania
+
+    @property
+    def mana(self):
+        return self._wymagania["Koszt many"]
 
 
 class Zwoj(Magia):
@@ -277,14 +285,26 @@ class Runa(Magia):
         wartosc: int,
         mana: int,
         efekt: dict[str, Any],
+        # krąg mozna zastąpić wymaganiami lub dodawać krąg do wymagań
+        # w ten sam sposób, w którym robiliśmy z maną
+        # OVERALL -> zostajemy przy konwencji, że wymagania są z definicji None
+        # a później bezpośrednio w klasie nadpisujemy je jako dict, w którym jest mana oraz krąg
+        # natomiast jeśli przy tworzeniu obiektu my zdefiniujemy wymagania, to mamy dodatkowy
+        # klucz w tymże dictie - imo DONE.
         krag: int,
+        wymagania: dict[str, Any] | None = None,
     ):
+        def_dict: dict[str, Any] = {"Koszt many": mana, "Krąg": krag}
         super().__init__(nazwa, wartosc, mana, efekt)
-        self._krag = krag
+        self._wymagania = wymagania
+        if wymagania is None:
+            self._wymagania = def_dict
+        else:
+            self._wymagania.update(def_dict)
 
     @property
     def krag(self):
-        return self._krag
+        return self._wymagania["Krąg"]
 
 
 class Pismo(Przedmiot):
@@ -306,6 +326,12 @@ class Pismo(Przedmiot):
         wartosc: int,
         tresc: str,
         efekt: dict[str, int] | None | str = None,
+        # można dodać opcjonalnie wymagania
+        # czy warto przechowywać pole treść w osobnym polu?
+        # można wyciągać go ze słownika efekt - teoretycznie tak, ale czy powinniśmy iść tą drogą
+        # generalnie z mojego punktu widzenia najlepiej by było, by efekt defaultowo był None,
+        # a dopiero wewnątrz innita nadpisywali jego wartość poprzez to, co podajemy w treści.
+        # Efekt nie NONE, gdy na przykład po przeczytaniu czegoś dostajemy jakieś bonusy. I tak dalej.
     ):
         self._tresc = tresc
         if efekt is None:
@@ -334,7 +360,7 @@ class Jedzenie(Przedmiot):
         self,
         nazwa: str,
         wartosc: int,
-        efekt: dict[str, int] | list,
+        efekt: dict[str, int],
     ):
         super().__init__(nazwa, wartosc, efekt)
 
@@ -350,8 +376,22 @@ class Artefakt(Przedmiot):
         o tym co przedmiot robi
     """
 
-    def __init__(self, nazwa: str, wartosc: int, efekt: dict[str, int] | None | list):
+    # dodaj wymagania tu :)
+    # dodaj pasy
+    def __init__(
+        self,
+        nazwa: str,
+        wartosc: int,
+        efekt: dict[str, int] | None | list,
+        wymagania: dict[str, Any] | None = None,
+    ):
         super().__init__(nazwa, wartosc, efekt)
+
+        self._wymagania = wymagania
+
+    @property
+    def wymagania(self):
+        return self._wymagania
 
 
 class Pierscien(Artefakt):
@@ -368,6 +408,12 @@ class Amulet(Artefakt):
     """
 
     pass
+
+
+class Pas(Artefakt):
+    """
+    Klasa Pas dziedzicząca z klasy Artefakt
+    """
 
 
 class Tablica(Artefakt):
@@ -392,7 +438,7 @@ class Tablica(Artefakt):
 
 class Pozostale(Przedmiot):
     """
-    Klasa Pozostałe, standardowe pola to nazwa, wartość oraz ilość.
+    Klasa Pozostałe, standardowe pola to nazwa, wartość oraz efefkt.
     Ta klasa trochę nie podoba mi się ze względu na zadaną liczbę argumentów
     imo powinno to być tak, że ta klasa może mieć dowolne argumenty
     nie wiem natomiast jak to zrobić, by były dziedziczone 3 podstawowe argumenty
@@ -404,7 +450,7 @@ class Pozostale(Przedmiot):
     :param wartosc: nazwa przedmiotu wyrażana w sztukach złota
     :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
-        o tym co przedmiot robi
+        o tym co przedmiot robi - to zrobić jako default argument w postaci NONE.
     """
 
     pass
@@ -418,14 +464,14 @@ class Kontener(dict):
     def wyswietl(self):
         return self
 
+    def __str__(self):
+        return type(self).__name__
+
 
 class Bronie(Kontener):
     """
     Kontener na przedmioty klasy Broń posiadający metodę wyświetl
     """
-
-    def __str__(self):
-        return type(self).__name__
 
 
 class Pancerze(Kontener):
@@ -433,17 +479,11 @@ class Pancerze(Kontener):
     Kontener na przedmioty klasy Pancerz posiadający metodę wyświetl
     """
 
-    def __str__(self):
-        return type(self).__name__
-
 
 class PrzedmiotyMagiczne(Kontener):
     """
     Kontener na przedmioty klasy Magia posiadający metodę wyświetl
     """
-
-    def __str__(self):
-        return type(self).__name__
 
 
 class Pisma(Kontener):
@@ -451,17 +491,11 @@ class Pisma(Kontener):
     Kontener na przedmioty klasy Pisma posiadający metodę wyświetl
     """
 
-    def __str__(self):
-        return type(self).__name__
-
 
 class Artefakty(Kontener):
     """
     Kontener na przedmioty klasy Artefakt posiadający metodę wyświetl
     """
-
-    def __str__(self):
-        return type(self).__name__
 
 
 class Zywnosc(Kontener):
@@ -469,56 +503,57 @@ class Zywnosc(Kontener):
     Kontener na przedmioty klasy Jedzenie posiadający metodę wyświetl
     """
 
-    def __str__(self):
-        return type(self).__name__
-
 
 class Pozostalosci(Kontener):
     """
     Kontener na przedmioty klasy Pozostale posiadający metodę wyświetl
     """
 
-    def __str__(self):
-        return type(self).__name__
-
 
 class Ekwipunek:
     """
     Klasa Ekwipunek -> To w niej znajdują się Przedmioty z Podłogi dodane za pomocą
     Bohatera. Tutaj również znajduje się kontener w uzyciu (nie wiem, czy słusznie).
-    :param bronie: kontener na przedmioty klasy Broń
-    :param pancerze: kontener na przedmioty klasy Pancerz
-    :param przedmioty magiczne: kontener na przedmioty klasy Magia
-    :param pisma: kontener na przedmioty klasy Pismo
-    :param artefakty: kontener na przedmioty klasy Artefakt
-    :param jedzenie: kontener na przedmioty klasy Jedzenie
-    :param pozostale: kontener na przedmioty klasy Pozostale
+
+    ...
+    Atrybuty
+
+    ----------
+    bronie: Kontener
+        kontener na przedmioty klasy Broń
+    pancerze: Kontener
+        kontener na przedmioty klasy Pancerz
+    przedmioty magiczne: Kontener
+        kontener na przedmioty klasy Magia
+    pisma: Kontener
+        kontener na przedmioty klasy Pismo
+    artefakty: Kontener
+        kontener na przedmioty klasy Artefakt
+    jedzenie: Kontener
+        kontener na przedmioty klasy Jedzenie
+    pozostale: Kontener
+        kontener na przedmioty klasy Pozostale
+    w_uzyciu: Kontener
+        kontener zawierający przedmioty znajdujące się w danej
+        chwili w użyciu
     :param magazyn: słownik zawierający wszystkie kontenery przypisane
         do odpowiedniego klucza
-    :param w_uzyciu: kontener zawierający przedmioty znajdujące się w danej
-        chwili w użyciu
     """
 
     def __init__(self):
-        self._bronie = Bronie()
-        self._pancerze = Pancerze()
-        self._przedmioty_magiczne = PrzedmiotyMagiczne()
-        self._pisma = Pisma()
-        self._artefakty = Artefakty()
-        self._jedzenie = Zywnosc()
-        self._pozostale = Pozostalosci()
-        self._w_uzyciu = defaultdict(list)
-        # trochę słaby ten mapping, ale na ten moment nie mam lepszego pomysłu
-        self._mapping = {
-            str(self._bronie): "bronie",
-            str(self._pancerze): "pancerze",
-            str(self._przedmioty_magiczne): "przedmioty_magiczne",
-            str(self._pisma): "pisma",
-            str(self._artefakty): "artefakty",
-            str(self._jedzenie): "jedzenie",
-            str(self._pozostale): "pozostale",
-        }
-        self._magazyn = {
+        self._bronie: Kontener = Bronie()
+        self._pancerze: Kontener = Pancerze()
+        self._przedmioty_magiczne: Kontener = PrzedmiotyMagiczne()
+        self._pisma: Kontener = Pisma()
+        self._artefakty: Kontener = Artefakty()
+        self._jedzenie: Kontener = Zywnosc()
+        self._pozostale: Kontener = Pozostalosci()
+        # TODO: zamiast default dicta użyć dataclass (spróbuj), gdzie definuję
+        # pola oraz ile może być przedmiotów. Zdefiniować to na sztywno
+        # przełączyć na 3.13 sięęęe.
+
+        self._w_uzyciu = defaultdict(list)  # eee do ogarnięcia (?)
+        self._magazyn: dict[str, Kontener] = {
             str(self._bronie): self._bronie,
             str(self._pancerze): self._pancerze,
             str(self._przedmioty_magiczne): self._przedmioty_magiczne,
@@ -527,6 +562,17 @@ class Ekwipunek:
             str(self._jedzenie): self._jedzenie,
             str(self._pozostale): self._pozostale,
         }
+        self._mapping: dict[Any, Any] = {
+            Bron: self._bronie,
+            Pancerz: self._pancerze,
+            Magia: self._przedmioty_magiczne,
+            Pismo: self._pisma,
+            Artefakt: self._artefakty,
+            Jedzenie: self._jedzenie,
+            Pozostale: self._pozostale,
+        }
+
+    # Czy to jest potrzebne?
 
     @property
     def bronie(self):
@@ -564,7 +610,9 @@ class Ekwipunek:
     def magazyn(self):
         return self._magazyn
 
-    def wyrzuc(self, item, nazwa_kontenera):
+    # zmienna globalna - słownik zdefiniowany jako odrębna rzecz
+    # czyli tak naprawdę mapping - mapuję isinstance danego rpzedmiotu z kontenerem - DONE
+    def wyrzuc(self, item):
         """
         Metoda wyrzuć wyrzucająca dany przedmiot z obiektu klasy Ekwipunek i zwracająca go
         do obiektu klasy lokalizacja.
@@ -577,21 +625,25 @@ class Ekwipunek:
         # itertools,chain.from iterable
         # ujednolicenie wartości w użyciu -> Każdy z tych kontenerów ma zawierać w sobie
         # listę obiektów (nawet jeśli jest jeden), a nie sam obiekt
-        # np żeby móc używać dwóch run naraz - bo przecież tak mozna - DONE, nie lista a tupla
-        #TODO: defaultdict
-
+        # np żeby móc używać dwóch run naraz - bo przecież tak mozna - DONE
+        # TODO: defaultdict, trochę potrzebuje przykładu
         # TO JEST DO ZROBIENIA...
+        # powinienem móc odnieść się do konkretnego kontenera w uzyciu z racji mappingu powyzej
+        # i wtedy interesuja nas przedmioty/przedmiot znajdujace sie tylko w tym danym kontenerze
+        # optymalizacja - DONE!!!!!
         for _, v in self.w_uzyciu.items():
-            if item == v:
+            if item in v:
                 print("\nNie można usunąć przedmiotu, który jest w użyciu!\n")
                 return None
-        kontener = getattr(self, self._mapping[nazwa_kontenera])
-        przedmioty = kontener[item.nazwa]
-        if len(przedmioty) == 1:
-            del kontener[item.nazwa]
-        return przedmioty.pop(0)
+        for k, v in self._mapping.items():
+            if isinstance(item, k):
+                kontener = self._mapping[k]
+                przedmioty = kontener[item.nazwa]
+                if len(przedmioty) == 1:
+                    del kontener[item.nazwa]
+                return przedmioty.pop(0)
 
-    def uzyj(self, item, lokalizacja):
+    def uzyj(self, item):
         """
         Metoda użyj działa inaczej w zależności od klasy danego przedmiotu.
         Dla klasy Pismo:
@@ -615,6 +667,13 @@ class Ekwipunek:
             elif isinstance(item, Jedzenie):
                 clear()
                 print(item.efekt)
+                # w takim wypadku dobrym pomysłem byłoby zdefiniować jakies
+                # statystyki bohatera - typu HP, mana, sila etc.
+                # to by powodowalo ze bysmy po pierwsze walidowali te pola
+                # i na przyklad danego przedmiotu nie daloby sie uzyc
+                # oraz zwiekszali/zmiejszali statystki bohatera na podstawie
+                # przedmiotow
+
                 self._jedzenie[item.nazwa].remove(item)
                 if len(self._jedzenie[item.nazwa]) == 0:
                     del self._jedzenie[item.nazwa]
@@ -628,22 +687,23 @@ class Ekwipunek:
                 else:
                     if type(item).__name__ not in self._w_uzyciu.keys():
                         clear()
-                        self._w_uzyciu.update({type(item).__name__: (item,)})
+                        self._w_uzyciu.update({type(item).__name__: [item]})
                     else:
-                        self._w_uzyciu[type(item).__name__] += (item,)
+                        self._w_uzyciu[type(item).__name__] += [item]
             elif isinstance(item, Pozostale):
                 pass
             else:
-                self._w_uzyciu.update({type(item).__name__: (item,)})
+                self._w_uzyciu.update({type(item).__name__: [item]})
             clear()
             print("\nPrzedmiot został użyty!\n")
-            self.interfejs(lokalizacja)
         else:
             clear()
             print("\nPrzedmiotu nie da się użyć!\n")
-            self.interfejs(lokalizacja)
 
-    def zdejmij(self, item, lokalizacja, przedmioty_w_uzyciu):
+    def zdejmij(self, item):
+
+        # teoretycznie ta funkcja powinna przyjmować tylko JEDEN argument - i jest to item
+        # DONE
         """
         Metoda ściąga dany przedmiot z przedmiotów w użyciu.
 
@@ -653,20 +713,14 @@ class Ekwipunek:
         :param przedmioty_w_uzyciu: lista, w ktorej znajduja sie nazwy przedmiotow obecnie
             znajdujących się w użyciu
         """
-        for key, value in Ekwipunek_Obiekt.w_uzyciu.copy().items():
+        for key, value in self.w_uzyciu.items():
             for i in value:
                 if i == item:
-                    Ekwipunek_Obiekt.w_uzyciu[key] = list(
-                        Ekwipunek_Obiekt.w_uzyciu[key]
-                    )
-                    Ekwipunek_Obiekt.w_uzyciu[key].remove(item)
-                    tuple(Ekwipunek_Obiekt.w_uzyciu[key])
+                    self.w_uzyciu[key].remove(item)
                     if len(value) == 1:
-                        del Ekwipunek_Obiekt.w_uzyciu[key]
-                    przedmioty_w_uzyciu.remove(item.nazwa)
+                        del self.w_uzyciu[key]
         clear()
         print("\nPrzedmiot został zdjęty!\n")
-        self.interfejs(lokalizacja)
 
     def dodaj(self, przedmiot):
         """
@@ -674,42 +728,16 @@ class Ekwipunek:
 
         :param przedmiot: obiekt klasy Przedmiot
         """
-        if isinstance(przedmiot, Bron):
-            if przedmiot.nazwa not in self.bronie:
-                self._bronie.update({przedmiot.nazwa: [przedmiot]})
-            else:
-                self._bronie[przedmiot.nazwa].append(przedmiot)
-        elif isinstance(przedmiot, Pancerz):
-            if przedmiot.nazwa not in self.pancerze:
-                self._pancerze.update({przedmiot.nazwa: [przedmiot]})
-            else:
-                self._pancerze[przedmiot.nazwa].append(przedmiot)
-        elif isinstance(przedmiot, Magia):
-            if przedmiot.nazwa not in self.przedmioty_magiczne:
-                self._przedmioty_magiczne.update({przedmiot.nazwa: [przedmiot]})
-            else:
-                self._przedmioty_magiczne[przedmiot.nazwa].append(przedmiot)
-        elif isinstance(przedmiot, Pismo):
-            if przedmiot.nazwa not in self.pisma:
-                self._pisma.update({przedmiot.nazwa: [przedmiot]})
-            else:
-                self._pisma[przedmiot.nazwa].append(przedmiot)
-        elif isinstance(przedmiot, Artefakt):
-            if przedmiot.nazwa not in self.artefakty:
-                self._artefakty.update({przedmiot.nazwa: [przedmiot]})
-            else:
-                self._artefakty[przedmiot.nazwa].append(przedmiot)
-        elif isinstance(przedmiot, Jedzenie):
-            if przedmiot.nazwa not in self.jedzenie:
-                self._jedzenie.update({przedmiot.nazwa: [przedmiot]})
-            else:
-                self._jedzenie[przedmiot.nazwa].append(przedmiot)
-        elif isinstance(przedmiot, Pozostale):
-            if przedmiot.nazwa not in self.pozostale:
-                self._pozostale.update({przedmiot.nazwa: [przedmiot]})
-            else:
-                self._pozostale[przedmiot.nazwa].append(przedmiot)
 
+        for k, v in self._mapping.items():
+            if isinstance(przedmiot, k):
+                kontener = self._mapping[k]
+                if przedmiot.nazwa not in kontener:
+                    kontener.update({przedmiot.nazwa: [przedmiot]})
+                else:
+                    kontener[przedmiot.nazwa].append(przedmiot)
+
+    # możliwe że wyjebać tę metodę
     def wyswietl_magazyn(self):
         """
         Metoda zwracająca kontener magazyn
@@ -733,10 +761,6 @@ class Ekwipunek:
 
         :param lokalizacja: jest to lokalizacja, w ktorej uzytkownik obecnie sie znajduje,
             dla przykladu Khorinis lub Gornicza Dolina
-        :param init = bool, okresla czy dana metoda zostala wywolana w module po raz pierwszy
-            Ma to na celu wyprintowanie informacji na temat symboli wykorzystywanych przez
-            metode. Nie chcemy wywoływać tych informacji za każdym razem, gdy wywolujemy
-            metode.
 
         """
         slownik_interfejsu: dict[int, str] = {}
@@ -758,6 +782,7 @@ class Ekwipunek:
                 # k - Gulasz Thekli
                 # v - [<__main__.Jedzenie object at 0x104360d60>,
                 # <__main__.Jedzenie object at 0x104360dc0>]
+                # tę całą pętlę wsadzić do podmetody - prywatnej
                 for k, v in value.items():
                     # sprawdzam czy zbiory sie pokrywaja - jesli tak, to dany przedmiot jest
                     # w uzyciu
@@ -797,13 +822,14 @@ class Ekwipunek:
                 # 'Zmyślony Łuk': [<__main__.Luk object at 0x10233c610>],
                 # 'Zmyślona Kusza': [<__main__.Kusza object at 0x10233c640>]}
 
-                #TODO: Walidacje robić przed - tzn sprawdzenie - nie muszę
+                # TODO: Walidacje robić przed - tzn sprawdzenie - nie muszę
                 # iterować następny raz po wyswietl_magazyn().items()
+                # TUTAJ prosiłbym o konkret
 
                 for kontener, przedmioty in self.wyswietl_magazyn().items():
                     # slownik_interfejsu[int(ID_przedmiotu)] = 'Szept Burzy'
 
-                    #TODO: DODAĆ OBSŁUGĘ FLOAT'A - po co?
+                    # TODO: DODAĆ OBSŁUGĘ FLOAT'A - po co?
 
                     if (
                         przedmiot := slownik_interfejsu[int(identifier_przedmiotu)]
@@ -813,14 +839,12 @@ class Ekwipunek:
                             0
                         ]
 
-                        #TODO: zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
+                        # TODO: zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
                         # uzyciu czy nie - do przegadania czy jest to potrzebne.
-
 
                         # od tego momentu powinienem wyeksportowac wszystko co jest dalej
                         # do innej funkcji(sprawdzic czy tam byloby GIT) - DONE
-                        self.podinterfejs(item, lokalizacja, przedmiot, kontener)
-                        return 0
+                        self.podinterfejs(item, lokalizacja, przedmiot)
             except KeyError:
                 clear()
                 print("\nDanego przedmiotu nie ma w ekwipunku.\n")
@@ -828,7 +852,15 @@ class Ekwipunek:
                 clear()
                 print("\nDanego przedmiotu nie ma w ekwipunku.\n")
 
-    def podinterfejs(self, item, lokalizacja, przedmiot, kontener):
+    def podinterfejs(self, item, lokalizacja, przedmiot):
+        """
+        Metoda podinterfejs odpowiadająca za podinterfejs ekwipunku - tutaj dzieją
+        sie wszystkie rzeczy po "wybraniu" przedmiotu.
+
+        :param item
+        :param lokalizacja
+        :param przedmiot
+        """
 
         przedmioty_w_uzyciu: list[str, Any] = [
             obj.nazwa for nazwa_obj in self.w_uzyciu.values() for obj in nazwa_obj
@@ -855,14 +887,15 @@ class Ekwipunek:
                         input(prompt.format(warunek="Zdejmij"))
                     )
                 if wybranie_przedmiotu == 1 and przedmiot not in przedmioty_w_uzyciu:
-                    self.uzyj(item, lokalizacja)
+                    self.uzyj(item)
                     break
                 if wybranie_przedmiotu == 1 and przedmiot in przedmioty_w_uzyciu:
-                    self.zdejmij(item, lokalizacja, przedmioty_w_uzyciu)
+                    self.zdejmij(item)
                     break
                 if wybranie_przedmiotu == 2:
                     clear()
-                    self.wyrzuc(item, kontener)
+                    if self.wyrzuc(item) is None:
+                        break
                     lokalizacja.zawartosc.append(item)
                     break
                 if wybranie_przedmiotu == 3:
@@ -1041,12 +1074,12 @@ class Khorinis(Lokalizacja):
 
     def __init__(self):
         self.zawartosc: list = [
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}),
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}),
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}),
-            BronJednoreczna("Kij z gwoździem", 7, {"Siła": 5}, {"obrazenia": 11}),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),
+            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),
+            BronJednoreczna("Kij z gwoździem", 7, {"Siła": 5}, {"obrazenia": 11}, 1),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}, 2),
+            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}, 2),
             Luk("Zmyślony Łuk", 20, {"Zręczność": 20}, {"obrazenia": 100}),
             Kusza("Zmyślona Kusza", 30, {"Zręczność": 50}, {"obrazenia": 80}),
             Pancerz(
@@ -1070,8 +1103,14 @@ class Khorinis(Lokalizacja):
                 },
                 {"Siła": 0},
             ),
-            Runa("Bryła lodu", 700, 3, {"Obrażenia": 3}, 50),
-            Runa("Deszcz ognia", 1300, 5, {"Obrażenia": 13}, 100),
+            Runa(
+                "Bryła lodu",
+                700,
+                10,
+                {"Obrażenia": 50},
+                3,
+            ),
+            Runa("Deszcz ognia", 1300, 100, {"Obrażenia": 15}, 5),
             Zwoj("Wymyślony Zwój", 20, 5, {"Leczenie": 15}),
             Pismo(
                 "Dwór Irdorath",
@@ -1105,12 +1144,13 @@ class GorniczaDolina(Lokalizacja):
                 1360,
                 {"Siła": 20},
                 {"obrazenia": 50},
+                2,
             ),
             BronJednoreczna(
-                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, {"obrazenia": 11}
+                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, {"obrazenia": 11}, 2
             ),
             BronJednoreczna(
-                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, {"obrazenia": 11}
+                "Mieczyk z Gorniczej Doliny", 7, {"Siła": 5}, {"obrazenia": 11}, 2
             ),
             Pancerz(
                 "Zbroja z pancerzy pełzaczy z Gorniczej Doliny",
@@ -1146,9 +1186,15 @@ class Jarkendar(Lokalizacja):
 
     def __init__(self):
         self.zawartosc = [
-            BronJednoreczna("Jaszczurzy miecz", 1360, {"Siła": 40}, {"obrazenia": 100}),
-            BronJednoreczna("Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}),
-            BronJednoreczna("Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}),
+            BronJednoreczna(
+                "Jaszczurzy miecz", 1360, {"Siła": 40}, {"obrazenia": 100}, 3
+            ),
+            BronJednoreczna(
+                "Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}, 3
+            ),
+            BronJednoreczna(
+                "Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}, 3
+            ),
             Pancerz(
                 "Zbroja z Jaszczura",
                 3000,
@@ -1160,7 +1206,9 @@ class Jarkendar(Lokalizacja):
                 },
                 {"Siła": 15},
             ),
-            Runa("Bryła lodu z Jarkendaru", 700, 3, {"obrazenia": 3}, 50),
+            Runa(
+                "Bryła lodu z Jarkendaru", 700, 50, {"obrazenia": 10}, 3, {"Siła": 30}
+            ),
             Pismo(
                 "Dwór Irdorath z Jarkendaru",
                 0,
@@ -1222,7 +1270,7 @@ def interfejs_glowny(lokalizacja=None):
     # nie podawac lokalizacji do metody wyrzuc, tylko podawac jej kontener, a metoda wyrzuc
     # zwracala wyrzucany obiekt - DONE, ale jakim kosztem ->
     # przekazywanie do lokalizacji znajduje się poza funkcją.
-    #TODO: bohater -> dorobic mu funkcjonalnosc - w jaki sposób?
+    # TODO: bohater -> dorobic mu funkcjonalnosc - w jaki sposób?
     # while lokalizacja is None:
     #    lokalizacja = modul()
 
