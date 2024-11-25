@@ -1,6 +1,9 @@
+"""
+Moduł z funkcją clear
+"""
+
 import os
 import platform
-
 
 def clear():
     """
@@ -9,5 +12,4 @@ def clear():
     """
     if platform.system() == "Windows":
         return os.system("cls")
-    else:
-        return os.system("clear")
+    return os.system("clear")

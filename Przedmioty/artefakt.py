@@ -8,6 +8,7 @@ from Kontenery.typed_dicts import ArtefaktEfekt
 from Przedmioty.przedmiot import Przedmiot
 
 
+# pylint: disable=missing-function-docstring
 class Artefakt(Przedmiot):
     """
     Klasa artefakty.

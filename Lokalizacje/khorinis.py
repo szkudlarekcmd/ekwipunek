@@ -1,3 +1,7 @@
+"""
+Moduł z klasą Khorinis
+"""
+
 from Lokalizacje.lokalizacja import Lokalizacja
 from Przedmioty.artefakt import Amulet, Artefakt
 from Przedmioty.bron import BronJednoreczna, Kusza, Luk
@@ -7,6 +11,8 @@ from Przedmioty.pancerz import Pancerz
 from Przedmioty.pismo import Pismo
 from Przedmioty.pozostale import Pozostale
 
+# pylint: disable = too-few-public-methods
+
 
 class Khorinis(Lokalizacja):
     """
@@ -15,6 +21,7 @@ class Khorinis(Lokalizacja):
     """
 
     def __init__(self):
+        super().__init__()
         self.zawartosc: list = [
             BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),
             BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),

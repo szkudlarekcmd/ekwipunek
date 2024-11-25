@@ -1,5 +1,12 @@
+"""
+Moduł z klasą Bron.
+"""
+
 from Kontenery.typed_dicts import BronEfekt
 from Przedmioty.przedmiot import Przedmiot
+
+# pylint: disable=missing-function-docstring, too-many-arguments
+# pylint: disable=too-many-positional-arguments
 
 
 class Bron(Przedmiot):
@@ -100,15 +107,11 @@ class Luk(BronDystansowa):
     Klasa Łuk -> nie dzieje się tu zbyt wiele.
     """
 
-    pass
-
 
 class Kusza(BronDystansowa):
     """
     Klasa Kusza -> nie dzieje się tu zbyt wiele.
     """
-
-    pass
 
 
 class BronJednoreczna(BronBiala):
@@ -116,12 +119,8 @@ class BronJednoreczna(BronBiala):
     Klasa Broń Jednoręczna -> nie dzieje się tu zbyt wiele.
     """
 
-    pass
-
 
 class BronDwureczna(BronBiala):
     """
     Klasa Broń Dwuręczna - nie dzieje się tu zbyt wiele.
     """
-
-    pass

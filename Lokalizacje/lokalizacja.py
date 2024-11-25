@@ -1,7 +1,15 @@
+"""
+Moduł z klasą Lokalizacja.
+"""
+
+
 class Lokalizacja:
     """
     Klasa Lokalizacja.
     """
+
+    def __init__(self):
+        self.zawartosc = None
 
     def __str__(self):
         return type(self).__name__

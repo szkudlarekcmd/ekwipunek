@@ -6,8 +6,8 @@ from clear import clear
 
 from ekwipunek import Ekwipunek, Ekwipunek_Obiekt
 
+# pylint: disable=inconsistent-return-statements, missing-function-docstring
 
-# pylint: disable=inconsistent-return-statements
 # TODO: bohater -> dorobic mu funkcjonalnosc - w jaki sposób?
 class Bohater:
     """
@@ -88,5 +88,7 @@ class Bohater:
         """
         Ekwipunek.dodaj(Ekwipunek_Obiekt, przedmiot)
 
+
 # PRZYPAŁ Z CIRCULAR IMPORT : (
+# zaproponowałbym przeniesienie tych dwóch metod do klasy ekwipunek
 Bohater_Obiekt = Bohater(hp=10, mana=10, sila=0, zrecznosc=0)

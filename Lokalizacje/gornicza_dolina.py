@@ -1,9 +1,15 @@
+"""
+Moduł zawierający klasę GorniczaDolina
+"""
+
 from Lokalizacje.lokalizacja import Lokalizacja
 from Przedmioty.bron import BronJednoreczna
 from Przedmioty.jedzenie import Jedzenie
 from Przedmioty.magia import Runa
 from Przedmioty.pancerz import Pancerz
 from Przedmioty.pismo import Pismo
+
+# pylint: disable=too-few-public-methods
 
 
 class GorniczaDolina(Lokalizacja):
@@ -13,6 +19,7 @@ class GorniczaDolina(Lokalizacja):
     """
 
     def __init__(self):
+        super().__init__()
         self.zawartosc = [
             BronJednoreczna(
                 "Szept Burzy z Gorniczej Doliny",

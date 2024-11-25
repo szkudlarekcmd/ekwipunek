@@ -1,3 +1,7 @@
+"""
+Moduł jarkendar zawierający klasę Jarkendar
+"""
+
 from Lokalizacje.lokalizacja import Lokalizacja
 from Przedmioty.bron import BronJednoreczna
 from Przedmioty.jedzenie import Jedzenie
@@ -6,12 +10,16 @@ from Przedmioty.pancerz import Pancerz
 from Przedmioty.pismo import Pismo
 
 
+# pylint: disable=too-few-public-methods
+
+
 class Jarkendar(Lokalizacja):
     """
     Klasa Jarkendar to zbiór wszystkich stworzonych obiektów typu Przedmiot w Jarkendarze.
     """
 
     def __init__(self):
+        super().__init__()
         self.zawartosc = [
             BronJednoreczna(
                 "Jaszczurzy miecz", 1360, {"Siła": 40}, {"obrazenia": 100}, 3

@@ -9,6 +9,9 @@ from Przedmioty.bron import BronDwureczna, BronJednoreczna
 
 from ekwipunek import Ekwipunek_Obiekt
 
+#pylint: disable=protected-access, too-many-branches, too-many-statements
+#pylint: disable=inconsistent-return-statements
+#pylint: disable=too-few-public-methods
 
 class Oselka:
     """
