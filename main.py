@@ -5,14 +5,24 @@ Konwencja -> Koncept jest taki, że w kodzie polskich znaków nie ma oprócz str
 Wszystko w pierdolnikach jest oficjalne
 """
 
-from bohater import Bohater_Obiekt
+from bohater import Bohater
 from clear import clear
-from Lokalizacje.gornicza_dolina import Gornicza_Dolina_Obiekt
-from Lokalizacje.jarkendar import Jarkendar_Obiekt
-from Lokalizacje.khorinis import Khorinis_Obiekt
-from oselka import Oselka_Obiekt
+from Lokalizacje.lokalizacja import Lokalizacja
+from Lokalizacje.gornicza_dolina import GorniczaDolina
+from Lokalizacje.jarkendar import Jarkendar
+from Lokalizacje.khorinis import Khorinis
+from oselka import Oselka
 
-from ekwipunek import Ekwipunek_Obiekt
+from ekwipunek import Ekwipunek
+
+
+ekwipunek = Ekwipunek()
+lokalizacja = Lokalizacja()
+khorinis = Khorinis()
+gornicza_dolina = GorniczaDolina()
+jarkendar = Jarkendar()
+bohater = Bohater(hp=10, mana=10, sila=10, zrecznosc=10)
+oselka = Oselka()
 
 
 def wybor_lokalizacji():
@@ -28,21 +38,20 @@ def wybor_lokalizacji():
                 )
             )
             if val == 1:
-                aktualna_lokalizacja = Khorinis_Obiekt
-                return aktualna_lokalizacja
-            if val == 2:
-                aktualna_lokalizacja = Gornicza_Dolina_Obiekt
-                return aktualna_lokalizacja
-            if val == 3:
-                aktualna_lokalizacja = Jarkendar_Obiekt
-                return aktualna_lokalizacja
-            raise ValueError("błędna wartość elo")
+                aktualna_lokalizacja = khorinis
+            elif val == 2:
+                aktualna_lokalizacja = gornicza_dolina
+            elif val == 3:
+                aktualna_lokalizacja = jarkendar
+            else:
+                raise ValueError("błędna wartość elo")
+            return aktualna_lokalizacja
         except ValueError:
             clear()
             print("Podaj wartość jeszcze raz")
 
 
-def interfejs_glowny(lokalizacja=None):
+def interfejs_glowny(lokalizacja: Lokalizacja | None = None):
     """
     Interfejs główny modułu. Za jego pomocą wywoływane są metody.
 
@@ -59,7 +68,7 @@ def interfejs_glowny(lokalizacja=None):
     # while lokalizacja is None:
     #    lokalizacja = modul()
 
-    input_interfejs = {
+    input_interfejs: dict[bool, list[str]] = {
         True: [
             "Zmień lokalizację. ",
             "Zbierz przedmioty znajdujace sie w danej lokacji, ",
@@ -70,12 +79,12 @@ def interfejs_glowny(lokalizacja=None):
         False: ["Wybierz lokalizację początkową."],
     }
     while True:
-        prompt = [
+        prompt: list[str] = [
             f"{f'Znajdujesz się w {str(lokalizacja)}.' if lokalizacja else ''} "
             f"Wybierz co chcesz zrobić. "
         ]
         try:
-            zmienna = [
+            zmienna: list[str] = [
                 f"{x}. {y}"
                 for x, y in enumerate(input_interfejs[bool(lokalizacja)], start=1)
             ]
@@ -85,14 +94,14 @@ def interfejs_glowny(lokalizacja=None):
             if val == 1:
                 lokalizacja = wybor_lokalizacji()
             elif val == 2:
-                Bohater_Obiekt.podejrzyj(lokalizacja)
+                bohater.podejrzyj(lokalizacja, ekwipunek)
                 print("\nPrzedmioty zostały podniesione. \n")
             elif val == 3:
-                Ekwipunek_Obiekt.interfejs(lokalizacja)
+                bohater.interfejs(lokalizacja, ekwipunek)
             elif val == 4:
-                Oselka_Obiekt.naostrz(Ekwipunek_Obiekt.bronie)
+                oselka.naostrz(ekwipunek.bronie, ekwipunek)
             elif val == 5:
-                Ekwipunek_Obiekt.wyswietl_w_uzyciu()
+                ekwipunek.wyswietl_w_uzyciu()
         except ValueError:
             pass
 

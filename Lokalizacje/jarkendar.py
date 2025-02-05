@@ -57,6 +57,3 @@ class Jarkendar(Lokalizacja):
             Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
             Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
         ]
-
-
-Jarkendar_Obiekt = Jarkendar()

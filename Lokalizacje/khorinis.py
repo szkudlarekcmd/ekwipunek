@@ -78,6 +78,3 @@ class Khorinis(Lokalizacja):
             Artefakt("Kamień ogniskujący", 0, None),
             Pozostale("Grabie", 0, None),
         ]
-
-
-Khorinis_Obiekt = Khorinis()

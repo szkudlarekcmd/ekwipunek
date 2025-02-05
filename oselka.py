@@ -7,11 +7,10 @@ from typing import Any
 from clear import clear
 from Przedmioty.bron import BronDwureczna, BronJednoreczna
 
-from ekwipunek import Ekwipunek_Obiekt
+# pylint: disable=protected-access, too-many-branches, too-many-statements
+# pylint: disable=inconsistent-return-statements
+# pylint: disable=too-few-public-methods
 
-#pylint: disable=protected-access, too-many-branches, too-many-statements
-#pylint: disable=inconsistent-return-statements
-#pylint: disable=too-few-public-methods
 
 class Oselka:
     """
@@ -19,7 +18,7 @@ class Oselka:
     """
 
     @staticmethod
-    def naostrz(kontener: dict):
+    def naostrz(kontener: dict, obiekt_ekwipunku: "Ekwipunek"):
         """
         Metoda naostrz przyjmuje kontener jako argument, a następnie wyświetla przedmioty
         możliwe do naostrzenia znajdujące się w tym kontenerze. W tym momencie jedyny
@@ -28,13 +27,13 @@ class Oselka:
         pole 'naostrzony'
         :param kontener: kontener danego przedmiotu, np. bronie
         """
-        slownik_oselki = {}
+        slownik_oselki: dict[int, str] = {}
         przedmioty_w_uzyciu: list[str, Any] = [
             obj.nazwa
-            for nazwa_obj in Ekwipunek_Obiekt.w_uzyciu.values()
+            for nazwa_obj in obiekt_ekwipunku.w_uzyciu.values()
             for obj in nazwa_obj
         ]
-        identifier = 0
+        identifier: int = 0
         print("Oto wszystkie przedmioty w ekwipunku, które możesz naostrzyć:")
         for key, value in kontener.wyswietl().items():
             if isinstance(value[0], (BronJednoreczna, BronDwureczna)):
@@ -55,7 +54,7 @@ class Oselka:
                         slownik_oselki[identifier] = i.nazwa
                         identifier += 1
                         break
-        val = input(
+        val: input = input(
             "Podaj ID przedmiotu, który chciałbyś naostrzyć lub wpisz 'exit' by wyjść: "
         )
         if val == "exit":
@@ -85,7 +84,7 @@ class Oselka:
                     item._naostrzony = True
                     kontener.update({item._nazwa: [item]})
                     print("Przedmiot naostrzono")
-                    Oselka.naostrz(kontener)
+                    Oselka.naostrz(kontener, obiekt_ekwipunku)
                 else:
                     item = kontener[slownik_oselki[int(val)]][-1]
                     item._efekt["obrazenia"] = round(item._efekt["obrazenia"] * 1.10)
@@ -99,13 +98,10 @@ class Oselka:
                     else:
                         kontener[item._nazwa].append(item)
                     print("Przedmiot naostrzono")
-                    Oselka.naostrz(kontener)
+                    Oselka.naostrz(kontener, obiekt_ekwipunku)
             else:
                 print("Danego przedmiotu nie ma w ekwipunku!")
-                Oselka.naostrz(kontener)
+                Oselka.naostrz(kontener, obiekt_ekwipunku)
         except KeyError:
             print("Przedmiot z danym ID nie istnieje")
-            Oselka.naostrz(kontener)
-
-
-Oselka_Obiekt = Oselka()
+            Oselka.naostrz(kontener, obiekt_ekwipunku)
