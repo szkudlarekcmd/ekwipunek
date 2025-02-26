@@ -6,7 +6,7 @@ Moduł z klasą Przedmiot
 
 from abc import ABC
 
-from Kontenery.typed_dicts import PrzedmiotEfekt
+from kontenery.typed_dicts import PrzedmiotEfekt
 
 
 class Przedmiot(ABC):

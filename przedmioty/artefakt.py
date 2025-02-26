@@ -4,8 +4,8 @@ Moduł z klasą artefakt
 
 from typing import Any
 
-from Kontenery.typed_dicts import ArtefaktEfekt
-from Przedmioty.przedmiot import Przedmiot
+from kontenery.typed_dicts import ArtefaktEfekt
+from przedmioty.przedmiot import Przedmiot
 
 
 # pylint: disable=missing-function-docstring

@@ -4,8 +4,8 @@ Moduł z klasą Magia.
 
 from typing import Any
 
-from Kontenery.typed_dicts import MagiaEfekt
-from Przedmioty.przedmiot import Przedmiot
+from kontenery.typed_dicts import MagiaEfekt
+from przedmioty.przedmiot import Przedmiot
 
 # pylint: disable=too-many-arguments, too-many-positional-arguments
 # pylint: disable=missing-function-docstring

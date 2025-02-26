@@ -2,12 +2,12 @@
 Moduł zawierający klasę GorniczaDolina
 """
 
-from Lokalizacje.lokalizacja import Lokalizacja
-from Przedmioty.bron import BronJednoreczna
-from Przedmioty.jedzenie import Jedzenie
-from Przedmioty.magia import Runa
-from Przedmioty.pancerz import Pancerz
-from Przedmioty.pismo import Pismo
+from lokalizacje.lokalizacja import Lokalizacja
+from przedmioty.bron import BronJednoreczna
+from przedmioty.jedzenie import Jedzenie
+from przedmioty.magia import Runa
+from przedmioty.pancerz import Pancerz
+from przedmioty.pismo import Pismo
 
 # pylint: disable=too-few-public-methods
 
@@ -56,6 +56,6 @@ class GorniczaDolina(Lokalizacja):
                 0,
                 "Co robisz? Topisz złoto? Nie, siekam cebulkę.",
             ),
-            Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
-            Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
+            Jedzenie("Gulasz Thekli", 1, {"sila": 1, "Smak": "Zajebisty", "hp": 20}),
+            Jedzenie("Gulasz Thekli", 1, {"sila": 1, "Smak": "Zajebisty", "hp": 20}),
         ]

@@ -2,14 +2,14 @@
 Moduł z klasą Khorinis
 """
 
-from Lokalizacje.lokalizacja import Lokalizacja
-from Przedmioty.artefakt import Amulet, Artefakt
-from Przedmioty.bron import BronJednoreczna, Kusza, Luk
-from Przedmioty.jedzenie import Jedzenie
-from Przedmioty.magia import Runa, Zwoj
-from Przedmioty.pancerz import Pancerz
-from Przedmioty.pismo import Pismo
-from Przedmioty.pozostale import Pozostale
+from lokalizacje.lokalizacja import Lokalizacja
+from przedmioty.artefakt import Amulet, Artefakt
+from przedmioty.bron import BronJednoreczna, Kusza, Luk
+from przedmioty.jedzenie import Jedzenie
+from przedmioty.magia import Runa, Zwoj
+from przedmioty.pancerz import Pancerz
+from przedmioty.pismo import Pismo
+from przedmioty.pozostale import Pozostale
 
 # pylint: disable = too-few-public-methods
 
@@ -71,9 +71,9 @@ class Khorinis(Lokalizacja):
                 0,
                 "Co robisz? Topisz złoto? Nie, siekam cebulkę.",
             ),
-            Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
-            Jedzenie("Gulasz Thekli", 1, {"Siła": 1, "Smak": "Zajebisty", "HP": 20}),
-            Jedzenie("Zupa Rybna", 20, {"HP": 10}),
+            Jedzenie("Gulasz Thekli", 1, {"sila": 1, "Smak": "Zajebisty", "hp": 20}),
+            Jedzenie("Gulasz Thekli", 1, {"sila": 1, "Smak": "Zajebisty", "hp": 20}),
+            Jedzenie("Zupa Rybna", 20, {"hp": 10}),
             Amulet("Oko Innosa", 0, ["Możliwość rozmowy ze smokami"]),
             Artefakt("Kamień ogniskujący", 0, None),
             Pozostale("Grabie", 0, None),

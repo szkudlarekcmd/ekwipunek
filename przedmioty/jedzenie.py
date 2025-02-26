@@ -2,8 +2,8 @@
 Moduł z klasą Jedzenie.
 """
 
-from Kontenery.typed_dicts import JedzenieEfekt
-from Przedmioty.przedmiot import Przedmiot
+from kontenery.typed_dicts import JedzenieEfekt
+from przedmioty.przedmiot import Przedmiot
 
 
 class Jedzenie(Przedmiot):

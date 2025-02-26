@@ -2,8 +2,8 @@
 Moduł z klasą Bron.
 """
 
-from Kontenery.typed_dicts import BronEfekt
-from Przedmioty.przedmiot import Przedmiot
+from kontenery.typed_dicts import BronEfekt
+from przedmioty.przedmiot import Przedmiot
 
 # pylint: disable=missing-function-docstring, too-many-arguments
 # pylint: disable=too-many-positional-arguments

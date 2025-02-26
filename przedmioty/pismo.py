@@ -2,8 +2,8 @@
 Moduł z klasą Pismo
 """
 
-from Kontenery.typed_dicts import PismoEfekt
-from Przedmioty.przedmiot import Przedmiot
+from kontenery.typed_dicts import PismoEfekt
+from przedmioty.przedmiot import Przedmiot
 
 # pylint: disable=missing-function-docstring
 

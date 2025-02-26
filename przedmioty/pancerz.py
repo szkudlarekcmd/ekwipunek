@@ -4,8 +4,8 @@ Moduł z klasą Pancerz
 
 from typing import Any
 
-from Kontenery.typed_dicts import PancerzEfekt
-from Przedmioty.przedmiot import Przedmiot
+from kontenery.typed_dicts import PancerzEfekt
+from przedmioty.przedmiot import Przedmiot
 
 # pylint: disable=missing-function-docstring
 

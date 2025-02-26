@@ -2,7 +2,7 @@
 Moduł z klasą Pozostale
 """
 
-from Przedmioty.przedmiot import Przedmiot
+from przedmioty.przedmiot import Przedmiot
 
 
 # pylint: disable=too-few-public-methods

@@ -2,8 +2,11 @@
 Moduł z klasą Lokalizacja.
 """
 
+from abc import ABC
 
-class Lokalizacja:
+from kontenery.typed_dicts import PrzedmiotEfekt
+
+class Lokalizacja(ABC):
     """
     Klasa Lokalizacja.
     """

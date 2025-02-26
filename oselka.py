@@ -5,7 +5,7 @@ Moduł z klasą Osełka
 from typing import Any
 
 from clear import clear
-from Przedmioty.bron import BronDwureczna, BronJednoreczna
+from przedmioty.bron import BronDwureczna, BronJednoreczna
 
 # pylint: disable=protected-access, too-many-branches, too-many-statements
 # pylint: disable=inconsistent-return-statements
