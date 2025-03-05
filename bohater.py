@@ -2,15 +2,10 @@
 Moduł z klasą Bohater
 """
 
-
 from ekwipunek import Ekwipunek
-from przedmioty.jedzenie import Jedzenie
-from przedmioty.magia import Magia, Zwoj
-from przedmioty.pismo import Pismo
-from przedmioty.pozostale import Pozostale
 from przedmioty.przedmiot import Przedmiot
 from clear import clear
-
+from lokalizacje.lokalizacja import Lokalizacja
 
 # pylint: disable=inconsistent-return-statements, missing-function-docstring
 
@@ -33,8 +28,9 @@ class Bohater:
         self._mana = mana
         self._sila = sila
         self._zrecznosc = zrecznosc
-        self.ekwipunek = Ekwipunek()
-
+        self.aktualna_lokalizacja = None
+        # nie lepiej, by metody bohatera były czymś na zasadzie type dicta lub dicta?
+        self.ekwipunek = Ekwipunek(metody_bohatera=(self.uzyj, self.podnies, self.wyrzuc, self.zdejmij))
 
     @property
     def hp(self):
@@ -47,6 +43,7 @@ class Bohater:
     @property
     def mana(self):
         return self._mana
+
     @mana.setter
     def mana(self, value):
         self._mana += value
@@ -54,6 +51,7 @@ class Bohater:
     @property
     def sila(self):
         return self._sila
+
     @sila.setter
     def sila(self, value):
         self._sila += value
@@ -61,6 +59,7 @@ class Bohater:
     @property
     def zrecznosc(self):
         return self._zrecznosc
+
     @zrecznosc.setter
     def zrecznosc(self, value):
         self._zrecznosc += value
@@ -109,115 +108,24 @@ class Bohater:
         Metoda podnieś, za pomocą której Bohater podnosi przedmioty.
         """
         self.ekwipunek.dodaj(przedmiot)
-
-
-    def wyrzuc(self, item: Przedmiot):
+    def wyrzuc(self, przedmiot: Przedmiot):
         """
-        Metoda wyrzuć wyrzucająca dany przedmiot z obiektu klasy Ekwipunek i zwracająca go
-        do obiektu klasy lokalizacja.
-
-        :param item: obiekt klasy Przedmiot
-        :param lokalizacja: jest to lokalizacja, w ktorej uzytkownik obecnie sie znajduje,
-            dla przykladu Khorinis lub Gornicza Dolina
+        Metoda wyrzuć, za pomocą której Bohater wyrzuca przedmiot.
         """
+        self.ekwipunek.wyrzuc(przedmiot)
 
-        # itertools,chain.from iterable
-        # ujednolicenie wartości w użyciu -> Każdy z tych kontenerów ma zawierać w sobie
-        # listę obiektów (nawet jeśli jest jeden), a nie sam obiekt
-        # np żeby móc używać dwóch run naraz - bo przecież tak mozna - DONE
-        # TODO: defaultdict, trochę potrzebuje przykładu
-        # TO JEST DO ZROBIENIA...
-        # powinienem móc odnieść się do konkretnego kontenera w uzyciu z racji mappingu powyzej
-        # i wtedy interesuja nas przedmioty/przedmiot znajdujace sie tylko w tym danym kontenerze
-        # optymalizacja - DONE!!!!!
-        for _, v in self.ekwipunek.w_uzyciu.items():
-            if item in v:
-                print("\nNie można usunąć przedmiotu, który jest w użyciu!\n")
-                return None
-        for k in self.ekwipunek._mapping:
-            if isinstance(item, k):
-                kontener = self.ekwipunek._mapping[k]
-                przedmioty = kontener[item.nazwa]
-                if len(przedmioty) == 1:
-                    del kontener[item.nazwa]
-                return przedmioty.pop(0)
-
-    def uzyj(self, item: Przedmiot):
+    def uzyj(self, przedmiot: Przedmiot):
         """
-        Metoda użyj działa inaczej w zależności od klasy danego przedmiotu.
-        Dla klasy Pismo:
-            zwraca zawartość Pisma
-        Dla klasy Jedzenie:
-            zwraca efekt, jaki jedzenie spowodowało po spożyciu, a następnie
-            usuwa obiekt z ekwipunku
-        Dla klasy Zwój:
-            informuje, iż zwój został zużyty, a następnie usuwa obiekt z ekwipunku
-        Dla reszty klas:
-            dodaje referencję z obiektu klasy Ekwipunek do kontenera w_uzyciu
-
-        :param item: obiekt klasy Przedmiot
-        :param lokalizacja: jest to lokalizacja, w ktorej uzytkownik obecnie sie znajduje,
-            dla przykladu Khorinis lub Gornicza Dolina
+        Metoda użyj, za pomocą której Bohater używa przedmiotu
         """
-        if item.efekt:
-            if isinstance(item, Pismo):
-                clear()
-                print(item.efekt)
+        self.ekwipunek.uzyj(przedmiot)
 
-            elif isinstance(item, Jedzenie):
-                clear()
-                print(item.efekt)
-                for k, v in item.efekt.items():
-                    if hasattr(self, k):
-                        setattr(self, k, getattr(self, k) + v)
-
-
-
-                self.ekwipunek._jedzenie[item.nazwa].remove(item)
-                if len(self.ekwipunek._jedzenie[item.nazwa]) == 0:
-                    del self.ekwipunek._jedzenie[item.nazwa]
-            elif isinstance(item, Magia):
-                if isinstance(item, Zwoj):
-                    clear()
-                    print("\nZwój został użyty!\n")
-                    self.ekwipunek._przedmioty_magiczne[item.nazwa].remove(item)
-                    if len(self.ekwipunek._przedmioty_magiczne[item.nazwa]) == 0:
-                        del self.ekwipunek._przedmioty_magiczne[item.nazwa]
-                else:
-                    if type(item).__name__ not in self._w_uzyciu.keys():
-                        clear()
-                        self.ekwipunek._w_uzyciu.update({type(item).__name__: [item]})
-                    else:
-                        self.ekwipunek._w_uzyciu[type(item).__name__] += [item]
-            elif isinstance(item, Pozostale):
-                pass
-            else:
-                self.ekwipunek._w_uzyciu.update({type(item).__name__: [item]})
-            clear()
-            print("\nPrzedmiot został użyty!\n")
-        else:
-            clear()
-            print("\nPrzedmiotu nie da się użyć!\n")
-
-    def zdejmij(self, item: Przedmiot):
+    def zdejmij(self, przedmiot: Przedmiot):
         """
-        Metoda ściąga dany przedmiot z przedmiotów w użyciu.
-
-        :param item: obiekt klasy Przedmiot
-        :param lokalizacja: jest to lokalizacja, w ktorej uzytkownik obecnie sie znajduje,
-            dla przykladu Khorinis lub Gornicza Dolina
-        :param przedmioty_w_uzyciu: lista, w ktorej znajduja sie nazwy przedmiotow obecnie
-            znajdujących się w użyciu
+        Metoda zdejmij, za pomocą której Bohater zdejmuje przedmiot
         """
-        for key, value in self.ekwipunek.w_uzyciu.copy().items():
-            #  RuntimeError: dictionary changed size during iteration, dlatego copy
-            for i in value:
-                if i == item:
-                    self.ekwipunek.w_uzyciu[key].remove(item)
-                    if len(value) == 0:
-                        del self.ekwipunek.w_uzyciu[key]
-        clear()
-        print("\nPrzedmiot został zdjęty!\n")
+        self.ekwipunek.zdejmij(przedmiot)
 
-    def zmien_lokalizacje(self, lokalizacja):
-        return lokalizacja
+    def zmien_lokalizacje(self, aktualna_lokalizacja: Lokalizacja):
+        self.lokalizacja = aktualna_lokalizacja
+        return self.lokalizacja

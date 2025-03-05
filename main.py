@@ -90,7 +90,7 @@ def interfejs_glowny(lokalizacja: Lokalizacja | None = None):
                     bohater.podejrzyj(lokalizacja)
                     print("\nprzedmioty zostały podniesione. \n")
                 case 3:
-                    bohater.ekwipunek.interfejs(lokalizacja, obiekt_bohatera=bohater)
+                    bohater.ekwipunek.interfejs(lokalizacja)
                 case 4:
                     oselka.naostrz(bohater.ekwipunek.bronie, bohater.ekwipunek)
                 case 5:
@@ -103,7 +103,7 @@ def interfejs_glowny(lokalizacja: Lokalizacja | None = None):
             pass
 
 
-interfejs_glowny(lokalizacja=None)
+interfejs_glowny(lokalizacja=bohater.aktualna_lokalizacja)
 
 # API - ladne punkty wejscia i wyjscia
 
