@@ -128,4 +128,3 @@ class Bohater:
 
     def zmien_lokalizacje(self, aktualna_lokalizacja: Lokalizacja):
         self.lokalizacja = aktualna_lokalizacja
-        return self.lokalizacja

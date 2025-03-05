@@ -39,7 +39,8 @@ def wybor_lokalizacji():
                     aktualna_lokalizacja = jarkendar
                 case _:
                     raise ValueError("błędna wartość elo")
-            return bohater.zmien_lokalizacje(aktualna_lokalizacja)
+            bohater.zmien_lokalizacje(aktualna_lokalizacja)
+            return bohater.lokalizacja
         except ValueError:
             clear()
             print("Podaj wartość jeszcze raz")
