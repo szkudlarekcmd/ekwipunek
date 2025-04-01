@@ -18,6 +18,8 @@ gornicza_dolina = GorniczaDolina()
 jarkendar = Jarkendar()
 bohater = Bohater(hp=10, mana=10, sila=10, zrecznosc=10)
 oselka = Oselka()
+
+
 def wybor_lokalizacji():
     """
     Metoda wybor_lokalizacja wywoływana jest, gdy nie znajdujemy się w żadnej lokalizacji
@@ -40,7 +42,7 @@ def wybor_lokalizacji():
                 case _:
                     raise ValueError("błędna wartość elo")
             bohater.zmien_lokalizacje(aktualna_lokalizacja)
-            return bohater.lokalizacja
+            return bohater.aktualna_lokalizacja
         except ValueError:
             clear()
             print("Podaj wartość jeszcze raz")
@@ -70,6 +72,7 @@ def interfejs_glowny(lokalizacja: Lokalizacja | None = None):
             "Odpal interfejs ekwipunku, ",
             "Odpal interfejs Osełki, ",
             "Wyświetl przedmioty w użyciu bohatera",
+            "Wyświetl atrybuty bohatera",
         ],
         False: ["Wybierz lokalizację początkową."],
     }
@@ -97,7 +100,7 @@ def interfejs_glowny(lokalizacja: Lokalizacja | None = None):
                 case 5:
                     bohater.ekwipunek.wyswietl_w_uzyciu()
                 case 6:
-                    print(vars(bohater))
+                    bohater.wyprintuj_swoje_atrybuty()
                 case _:
                     raise ValueError("Argh!")
         except ValueError:

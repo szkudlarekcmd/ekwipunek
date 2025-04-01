@@ -35,22 +35,30 @@ class Oselka:
         ]
         identifier: int = 0
         print("Oto wszystkie przedmioty w ekwipunku, które możesz naostrzyć:")
-        for key, value in kontener.wyswietl().items():
-            if isinstance(value[0], (BronJednoreczna, BronDwureczna)):
-                for i in value:
+        for nazwa_przedmiotów, lista_przedmiotów in kontener.wyswietl().items():
+            if isinstance(lista_przedmiotów[0], (BronJednoreczna, BronDwureczna)):
+                for i in lista_przedmiotów:
                     if not i.naostrzony:
                         if i.nazwa not in przedmioty_w_uzyciu:
                             # tu zalozenie ze wszystkie przedmioty z listy maja dany atrybut
-                            print(identifier, key, "sztuk " + str(len(value)))
+                            print(
+                                identifier,
+                                nazwa_przedmiotów,
+                                "sztuk " + str(len(lista_przedmiotów)),
+                            )
                             slownik_oselki[identifier] = i.nazwa
                             identifier += 1
                             break
-                        print(identifier, key, "w użyciu")
+                        print(identifier, nazwa_przedmiotów, "w użyciu")
                         slownik_oselki[identifier] = i.nazwa + " w użyciu"
                         identifier += 1
-                        if len(value) - 1 == 0:
+                        if len(lista_przedmiotów) - 1 == 0:
                             break
-                        print(identifier, key, "sztuk " + str(len(value) - 1))
+                        print(
+                            identifier,
+                            nazwa_przedmiotów,
+                            "sztuk " + str(len(lista_przedmiotów) - 1),
+                        )
                         slownik_oselki[identifier] = i.nazwa
                         identifier += 1
                         break

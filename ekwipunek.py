@@ -93,6 +93,8 @@ class Ekwipunek:
             Jedzenie: self._jedzenie,
             Pozostale: self._pozostale,
         }
+        # mapping istnieje ze względu na konwencję kontenerów z małej litery
+        # oraz nazw klas z dużej.
 
     # Czy to jest potrzebne?
 
@@ -147,9 +149,9 @@ class Ekwipunek:
         """
         Metoda wyświetlająca przedmioty w użyciu
         """
-        for k, v in self.w_uzyciu.items():
-            for var in v:
-                print(k, var.nazwa)
+        for typ, lista_przedmiotów in self.w_uzyciu.items():
+            for przedmiot in lista_przedmiotów:
+                print(typ, przedmiot.nazwa)
 
     def dodaj(self, przedmiot: Przedmiot):
         """
@@ -158,13 +160,14 @@ class Ekwipunek:
         :param przedmiot: obiekt klasy Przedmiot
         """
 
-        for k in self._mapping:
-            if isinstance(przedmiot, k):
-                kontener = self._mapping[k]
+        for klasa in self._mapping:
+            if isinstance(przedmiot, klasa):
+                kontener = self._mapping[klasa]
                 if przedmiot.nazwa not in kontener:
                     kontener.update({przedmiot.nazwa: [przedmiot]})
                 else:
                     kontener[przedmiot.nazwa].append(przedmiot)
+                break
 
     def wyrzuc(self, item: Przedmiot):
         """
@@ -185,17 +188,29 @@ class Ekwipunek:
         # powinienem móc odnieść się do konkretnego kontenera w uzyciu z racji mappingu powyzej
         # i wtedy interesuja nas przedmioty/przedmiot znajdujace sie tylko w tym danym kontenerze
         # optymalizacja - DONE!!!!!
-        for _, v in self.w_uzyciu.items():
-            if item in v:
+        for typ, lista_przedmiotów in self.w_uzyciu.items():
+            if item in lista_przedmiotów:
                 print("\nNie można usunąć przedmiotu, który jest w użyciu!\n")
                 return None
-        for k in self._mapping:
-            if isinstance(item, k):
-                kontener = self._mapping[k]
+        for klasa in self._mapping:
+            if isinstance(item, klasa):
+                kontener = self._mapping[klasa]
                 przedmioty = kontener[item.nazwa]
-                if len(przedmioty) == 1:
+                do_wyjebania = przedmioty.pop(0)
+                if not przedmioty:
                     del kontener[item.nazwa]
-                return przedmioty.pop(0)
+                return do_wyjebania
+
+    def _wyjeb_po_zjedzeniu(self, item: Przedmiot):
+        """
+        Wyjebuje po jedzeniu
+
+        :param item: Przedmiocik
+        """
+        self._jedzenie[item.nazwa].remove(item)
+        if not self._jedzenie[item.nazwa]:
+            del self._jedzenie[item.nazwa]
+
 
     def uzyj(self, item: Przedmiot):
         """
@@ -217,18 +232,13 @@ class Ekwipunek:
         if item.efekt:
             if isinstance(item, Pismo):
                 clear()
-                print(item.efekt)
-
+                print("Przyznano" + item.efekt)
+                return item.efekt
             elif isinstance(item, Jedzenie):
                 clear()
                 print(item.efekt)
-                for k, v in item.efekt.items():
-                    if hasattr(self, k):
-                        setattr(self, k, getattr(self, k) + v)
-
-                self._jedzenie[item.nazwa].remove(item)
-                if len(self._jedzenie[item.nazwa]) == 0:
-                    del self._jedzenie[item.nazwa]
+                self._wyjeb_po_zjedzeniu(item)
+                return item.efekt
             elif isinstance(item, Magia):
                 if isinstance(item, Zwoj):
                     clear()
@@ -237,7 +247,7 @@ class Ekwipunek:
                     if len(self._przedmioty_magiczne[item.nazwa]) == 0:
                         del self._przedmioty_magiczne[item.nazwa]
                 else:
-                    if type(item).__name__ not in self._w_uzyciu.keys():
+                    if type(item).__name__ not in self._w_uzyciu:
                         clear()
                         self._w_uzyciu.update({type(item).__name__: [item]})
                     else:
@@ -246,7 +256,8 @@ class Ekwipunek:
                 pass
             else:
                 self._w_uzyciu.update({type(item).__name__: [item]})
-            clear()
+                clear()
+            # clear()
             print("\nPrzedmiot został użyty!\n")
         else:
             clear()
@@ -262,16 +273,17 @@ class Ekwipunek:
         :param przedmioty_w_uzyciu: lista, w ktorej znajduja sie nazwy przedmiotow obecnie
             znajdujących się w użyciu
         """
-        for key, value in self.w_uzyciu.copy().items():
+        to_remove_key = None
+        for typ_przedmiotu, przedmioty in self.w_uzyciu.copy().items():
             #  RuntimeError: dictionary changed size during iteration, dlatego copy
-            for i in value:
-                if i == item:
-                    self.w_uzyciu[key].remove(item)
-                    if len(value) == 0:
-                        del self.w_uzyciu[key]
-        clear()
-        print("\nPrzedmiot został zdjęty!\n")
-
+            for przedmiot in przedmioty:
+                if przedmiot == item:
+                    to_remove_key = typ_przedmiotu
+                    break
+            if to_remove_key:
+                self.w_uzyciu[to_remove_key].remove(item)
+                if not self.w_uzyciu[to_remove_key]:
+                    del self.w_uzyciu[to_remove_key]
 
     def interfejs(self, lokalizacja: Lokalizacja):
         """
@@ -299,33 +311,33 @@ class Ekwipunek:
             # value - {'Szept Burzy z Gorniczej Doliny':
             # [<__main__.BronJednoreczna object at 0x104360b80>],
             # 'Mieczyk z Gorniczej Doliny': [<__main__.BronJednoreczna object at 0x104360bb0>]}
-            for value in self.wyswietl_magazyn().values():
+            for kontener in self.wyswietl_magazyn().values():
                 # k - Gulasz Thekli
                 # v - [<__main__.Jedzenie object at 0x104360d60>,
                 # <__main__.Jedzenie object at 0x104360dc0>]
                 # tę całą pętlę wsadzić do podmetody - prywatnej
-                for k, v in value.items():
+                for nazwa_przedmiotów, przedmioty in kontener.items():
                     # sprawdzam czy zbiory sie pokrywaja - jesli tak, to dany przedmiot jest
                     # w uzyciu
                     object_list = list(
                         chain.from_iterable(list(self.w_uzyciu.values()))
                     )
                     if len(self.w_uzyciu.values()) > 0 and bool(
-                        set(v) & set(object_list)
+                        set(przedmioty) & set(object_list)
                     ):
                         print(
-                            f"{identifier} * " + k + "    #" + " sztuk " + str(len(v))
+                            f"{identifier} * " + nazwa_przedmiotów + "    #" + " sztuk " + str(len(przedmioty))
                         )
-                        slownik_interfejsu[identifier] = k
+                        slownik_interfejsu[identifier] = nazwa_przedmiotów
                         identifier += 1
                     # sprawdzam, czy dany przedmiot można użyć
-                    elif v[0].efekt:
-                        print(f"{identifier} " + k + "   #" + " sztuk " + str(len(v)))
-                        slownik_interfejsu[identifier] = k
+                    elif przedmioty[0].efekt:
+                        print(f"{identifier} " + nazwa_przedmiotów + "   #" + " sztuk " + str(len(przedmioty)))
+                        slownik_interfejsu[identifier] = nazwa_przedmiotów
                         identifier += 1
                     else:
-                        print(f"{identifier} " + k + " sztuk " + str(len(v)))
-                        slownik_interfejsu[identifier] = k
+                        print(f"{identifier} " + nazwa_przedmiotów + " sztuk " + str(len(przedmioty)))
+                        slownik_interfejsu[identifier] = nazwa_przedmiotów
                         identifier += 1
             identifier_przedmiotu = input(
                 "Podaj ID przedmiotu, ktory chcesz wybrać, lub wpisz 'exit', by wyjść: "
@@ -400,9 +412,9 @@ class Ekwipunek:
         clear()
         print(f"Wybrany przedmiot:\n{item.nazwa}")
         # wyprintowanie statystyk
-        for kk, vv in item.__dict__.items():
-            if kk != "_nazwa":
-                print(kk.split("_")[1], vv)
+        for _naostrzony, czy_naostrzony in item.__dict__.items():
+            if _naostrzony != "_nazwa":
+                print(_naostrzony.split("_")[1], czy_naostrzony)
         # wybranie przedmiotu
         prompt = (
             "Co chcesz zrobić z danym przedmiotem?"
@@ -422,13 +434,16 @@ class Ekwipunek:
                     self.metody_bohatera[0](item)
                     break
                 if wybranie_przedmiotu == 1 and przedmiot in przedmioty_w_uzyciu:
-                    self.metody_bohatera[3](item)  # pod indexem 0
+                    self.metody_bohatera[3](item)
+                    clear() # pod indexem 0
+                    print("\nPrzedmiot został zdjęty!\n")
                     break
                 if wybranie_przedmiotu == 2:
                     clear()
                     if self.metody_bohatera[2](item) is None: # pod indexem 0 is None:
                         break
                     lokalizacja.zawartosc.append(item)
+                    print("\nPrzedmiot został wyrzucony!16")
                     break
                 if wybranie_przedmiotu == 3:
                     clear()

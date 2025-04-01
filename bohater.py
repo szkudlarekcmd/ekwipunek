@@ -30,7 +30,9 @@ class Bohater:
         self._zrecznosc = zrecznosc
         self.aktualna_lokalizacja = None
         # nie lepiej, by metody bohatera były czymś na zasadzie type dicta lub dicta?
-        self.ekwipunek = Ekwipunek(metody_bohatera=(self.uzyj, self.podnies, self.wyrzuc, self.zdejmij))
+        self.ekwipunek = Ekwipunek(
+            metody_bohatera=(self.uzyj, self.podnies, self.wyrzuc, self.zdejmij)
+        )
 
     @property
     def hp(self):
@@ -69,6 +71,8 @@ class Bohater:
         Metoda podejrzyj, za pomocą której Bohater dogląda przedmiotów znajdujących się
         w danej lokalizacji. Możemy zdecydować, czy podnieść wszystkie przedmioty, czy
         tylko te wybrane.
+
+        :param obiekt: Obiekt, do którego chcemy podejrzeć :)
         """
         podejrzyj_liste: list[str] = obiekt.spojrz().copy()
         while True:
@@ -106,25 +110,52 @@ class Bohater:
     def podnies(self, przedmiot: Przedmiot):
         """
         Metoda podnieś, za pomocą której Bohater podnosi przedmioty.
+
+        :param przedmiot: Przedmiot do podniesienia
         """
         self.ekwipunek.dodaj(przedmiot)
+
     def wyrzuc(self, przedmiot: Przedmiot):
         """
         Metoda wyrzuć, za pomocą której Bohater wyrzuca przedmiot.
+
+        :param wyrzuć: Przedmiot do wyrzucenia
         """
         self.ekwipunek.wyrzuc(przedmiot)
 
     def uzyj(self, przedmiot: Przedmiot):
         """
-        Metoda użyj, za pomocą której Bohater używa przedmiotu
+        Metoda użyj, za pomocą której Bohater używa przedmiotu oraz
+        przypisuje aktualizuje swoje atrybuty
+
+        :param przedmiot: Przedmiot do użycia
         """
-        self.ekwipunek.uzyj(przedmiot)
+        slownik_efektu = self.ekwipunek.uzyj(przedmiot)
+        for efekt, wartosc_efektu in slownik_efektu.items():
+            if hasattr(self, efekt):
+                setattr(self, efekt, getattr(self, efekt) + wartosc_efektu)
 
     def zdejmij(self, przedmiot: Przedmiot):
         """
         Metoda zdejmij, za pomocą której Bohater zdejmuje przedmiot
+
+        :param przedmiot: Przedmiot do ściągnięcia
         """
         self.ekwipunek.zdejmij(przedmiot)
 
     def zmien_lokalizacje(self, aktualna_lokalizacja: Lokalizacja):
-        self.lokalizacja = aktualna_lokalizacja
+        """
+        Metoda do zmienienia lokalizacji
+
+        :param aktualna_lokalizacja: aktualna lokalizacja
+        """
+        self.aktualna_lokalizacja = aktualna_lokalizacja
+
+    def wyprintuj_swoje_atrybuty(self):
+        """
+        Metoda do wyprintowania swoich atrybutów
+        """
+        print("HP", self.hp)
+        print("MANA", self.mana)
+        print("SIŁA", self.sila)
+        print("ZRĘCZNOŚĆ", self.zrecznosc)
