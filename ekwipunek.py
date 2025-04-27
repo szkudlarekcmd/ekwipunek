@@ -246,17 +246,21 @@ class Ekwipunek:
                     self._przedmioty_magiczne[item.nazwa].remove(item)
                     if len(self._przedmioty_magiczne[item.nazwa]) == 0:
                         del self._przedmioty_magiczne[item.nazwa]
+                    return item.efekt
                 else:
                     if type(item).__name__ not in self._w_uzyciu:
                         clear()
                         self._w_uzyciu.update({type(item).__name__: [item]})
+                        return item.efekt
                     else:
                         self._w_uzyciu[type(item).__name__] += [item]
+                        return item.efekt
             elif isinstance(item, Pozostale):
-                pass
+                return item.efekt
             else:
                 self._w_uzyciu.update({type(item).__name__: [item]})
                 clear()
+                return item.efekt
             # clear()
             print("\nPrzedmiot został użyty!\n")
         else:
