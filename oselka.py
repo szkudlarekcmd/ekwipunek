@@ -26,6 +26,7 @@ class Oselka:
         Metoda podnosi statystyki obrażeń przedmiotu o 10% oraz zmienia jego nazwę oraz
         pole 'naostrzony'
         :param kontener: kontener danego przedmiotu, np. bronie
+        :param obiekt_ekwipunku: obiekt klasy Ekwipunek
         """
         slownik_oselki: dict[int, str] = {}
         przedmioty_w_uzyciu: list[str, Any] = [

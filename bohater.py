@@ -32,7 +32,6 @@ class Bohater:
         self.aktualna_lokalizacja = None
         self.aktualne_hp = hp
         self.aktualna_mana = mana
-        # nie lepiej, by metody bohatera były czymś na zasadzie type dicta lub dicta?
         self.ekwipunek = Ekwipunek(
             metody_bohatera={
                 "uzyj": self.uzyj,
@@ -130,7 +129,7 @@ class Bohater:
         """
         Metoda wyrzuć, za pomocą której Bohater wyrzuca przedmiot.
 
-        :param wyrzuć: Przedmiot do wyrzucenia
+        :param przedmiot: Przedmiot do wyrzucenia
         """
         self.ekwipunek.wyrzuc(przedmiot)
         self.aktualna_lokalizacja.zawartosc.append(przedmiot)

@@ -18,10 +18,9 @@ class Artefakt(Przedmiot):
     :param efekt: efekt to zamiennik pola uzycie/bonusy ->
         jego obecnosc informuje iz przedmiot mozna uzyc, a sam efekt informuje
         o tym co przedmiot robi
+    :param wymagania: wymagania do użycia przedmiotu
     """
 
-    # dodaj wymagania tu :)
-    # dodaj pasy
     def __init__(
         self,
         nazwa: str,
