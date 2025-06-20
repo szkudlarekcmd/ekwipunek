@@ -23,14 +23,14 @@ class Khorinis(Lokalizacja):
     def __init__(self):
         super().__init__()
         self.zawartosc: list = [
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),
-            BronJednoreczna("Szept Burzy", 1360, {"Siła": 20}, {"obrazenia": 50}, 2),
-            BronJednoreczna("Kij z gwoździem", 7, {"Siła": 5}, {"obrazenia": 11}, 1),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}, 2),
-            BronJednoreczna("Mieczyk", 7, {"Siła": 5}, {"obrazenia": 11}, 2),
-            Luk("Zmyślony Łuk", 20, {"Zręczność": 20}, {"obrazenia": 100}),
-            Kusza("Zmyślona Kusza", 30, {"Zręczność": 50}, {"obrazenia": 80}),
+            BronJednoreczna("Szept Burzy", 1360, {"sila": 20}, {"obrazenia": 50}, 2),
+            BronJednoreczna("Szept Burzy", 1360, {"sila": 20}, {"obrazenia": 50}, 2),
+            BronJednoreczna("Szept Burzy", 1360, {"sila": 20}, {"obrazenia": 50}, 2),
+            BronJednoreczna("Kij z gwoździem", 7, {"sila": 5}, {"obrazenia": 11}, 1),
+            BronJednoreczna("Mieczyk", 7, {"sila": 5}, {"obrazenia": 11}, 2),
+            BronJednoreczna("Mieczyk", 7, {"sila": 5}, {"obrazenia": 11}, 2),
+            Luk("Zmyślony Łuk", 20, {"zrecznosc": 20}, {"obrazenia": 100}),
+            Kusza("Zmyślona Kusza", 30, {"zrecznosc": 50}, {"obrazenia": 80}),
             Pancerz(
                 "Zbroja strażnika",
                 1650,
@@ -39,7 +39,7 @@ class Khorinis(Lokalizacja):
                     "Ochrona przed strzałami": 10,
                     "Ochrona przed ogniem": 25,
                 },
-                {"Siła": 5},
+                {"sila": 5},
             ),
             Pancerz(
                 "Zbroja z pancerzy pełzaczy",
@@ -50,7 +50,7 @@ class Khorinis(Lokalizacja):
                     "Ochrona przed ogniem": 30,
                     "Ochrona przed magia": 5,
                 },
-                {"Siła": 0},
+                {"sila": 0},
             ),
             Runa(
                 "Bryła lodu",
@@ -74,6 +74,8 @@ class Khorinis(Lokalizacja):
             Jedzenie("Gulasz Thekli", 1, {"sila": 1, "Smak": "Zajebisty", "hp": 20}),
             Jedzenie("Gulasz Thekli", 1, {"sila": 1, "Smak": "Zajebisty", "hp": 20}),
             Jedzenie("Zupa Rybna", 20, {"hp": 10}),
+            Jedzenie("Jabłko", 1, {"sila": 100}),
+            Jedzenie("Maliny", 1, {"zrecznosc": 100}),
             Amulet("Oko Innosa", 0, ["Możliwość rozmowy ze smokami"]),
             Artefakt("Kamień ogniskujący", 0, None),
             Pozostale("Grabie", 0, None),

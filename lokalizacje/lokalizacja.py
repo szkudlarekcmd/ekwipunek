@@ -4,7 +4,6 @@ Moduł z klasą Lokalizacja.
 
 from abc import ABC
 
-from kontenery.typed_dicts import PrzedmiotEfekt
 
 class Lokalizacja(ABC):
     """

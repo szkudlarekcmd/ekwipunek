@@ -3,7 +3,10 @@ Moduł z klasą ekwipunek
 """
 
 # pylint: disable=consider-using-dict-items, missing-function-docstring,
-# pylint: disable=too-many-instance-attributes, inconsistent-return-statements)
+# pylint: disable=too-many-instance-attributes, inconsistent-return-statements
+# pylint: disable=too-many-branches, too-many-return-statements
+# pylint: disable=no-else-return, unused-variable
+# pylint: disable=fixme
 from collections import defaultdict
 from itertools import chain
 from typing import Any
@@ -153,6 +156,15 @@ class Ekwipunek:
             for przedmiot in lista_przedmiotów:
                 print(typ, przedmiot.nazwa)
 
+    def funkcja_pomocnicza(self, przedmiot):
+        """
+        Pomoc
+        """
+        for klasa in self._mapping:
+            if isinstance(przedmiot, klasa):
+                return self._mapping[klasa]
+        return None
+
     def dodaj(self, przedmiot: Przedmiot):
         """
         Metoda dodaj dodaje przedmioty do danego kontenera w zależności od klasy
@@ -160,14 +172,12 @@ class Ekwipunek:
         :param przedmiot: obiekt klasy Przedmiot
         """
 
-        for klasa in self._mapping:
-            if isinstance(przedmiot, klasa):
-                kontener = self._mapping[klasa]
-                if przedmiot.nazwa not in kontener:
-                    kontener.update({przedmiot.nazwa: [przedmiot]})
-                else:
-                    kontener[przedmiot.nazwa].append(przedmiot)
-                break
+        kontener = self.funkcja_pomocnicza(przedmiot)
+        if kontener is not None:
+            if przedmiot.nazwa not in kontener:
+                kontener.update({przedmiot.nazwa: [przedmiot]})
+            else:
+                kontener[przedmiot.nazwa].append(przedmiot)
 
     def wyrzuc(self, item: Przedmiot):
         """
@@ -192,14 +202,14 @@ class Ekwipunek:
             if item in lista_przedmiotów:
                 print("\nNie można usunąć przedmiotu, który jest w użyciu!\n")
                 return None
-        for klasa in self._mapping:
-            if isinstance(item, klasa):
-                kontener = self._mapping[klasa]
-                przedmioty = kontener[item.nazwa]
-                do_wyjebania = przedmioty.pop(0)
-                if not przedmioty:
-                    del kontener[item.nazwa]
-                return do_wyjebania
+        kontener = self.funkcja_pomocnicza(item)
+        if kontener is not None:
+            przedmioty = kontener[item.nazwa]
+            do_wyjebania = przedmioty.pop(0)
+            if not przedmioty:
+                del kontener[item.nazwa]
+            return do_wyjebania
+        return
 
     def _wyjeb_po_zjedzeniu(self, item: Przedmiot):
         """
@@ -210,7 +220,6 @@ class Ekwipunek:
         self._jedzenie[item.nazwa].remove(item)
         if not self._jedzenie[item.nazwa]:
             del self._jedzenie[item.nazwa]
-
 
     def uzyj(self, item: Przedmiot):
         """
@@ -229,25 +238,28 @@ class Ekwipunek:
         :param lokalizacja: jest to lokalizacja, w ktorej uzytkownik obecnie sie znajduje,
             dla przykladu Khorinis lub Gornicza Dolina
         """
-        if item.efekt:
-            if isinstance(item, Pismo):
+        if not item.efekt:
+            clear()
+            return 0
+        if isinstance(item, Pismo):
+            clear()
+            print("Przyznano" + item.efekt)
+            return item.efekt
+        elif isinstance(item, Jedzenie):
+            clear()
+            print(item.efekt)
+            self._wyjeb_po_zjedzeniu(item)
+            return item.efekt
+        elif isinstance(item, Magia):
+            if isinstance(item, Zwoj):
                 clear()
-                print("Przyznano" + item.efekt)
+                print("\nZwój został użyty!\n")
+                self._przedmioty_magiczne[item.nazwa].remove(item)
+                if len(self._przedmioty_magiczne[item.nazwa]) == 0:
+                    del self._przedmioty_magiczne[item.nazwa]
                 return item.efekt
-            elif isinstance(item, Jedzenie):
-                clear()
-                print(item.efekt)
-                self._wyjeb_po_zjedzeniu(item)
-                return item.efekt
-            elif isinstance(item, Magia):
-                if isinstance(item, Zwoj):
-                    clear()
-                    print("\nZwój został użyty!\n")
-                    self._przedmioty_magiczne[item.nazwa].remove(item)
-                    if len(self._przedmioty_magiczne[item.nazwa]) == 0:
-                        del self._przedmioty_magiczne[item.nazwa]
-                    return item.efekt
-                else:
+            else:
+                if len(self.w_uzyciu["Runa"]) < 7:
                     if type(item).__name__ not in self._w_uzyciu:
                         clear()
                         self._w_uzyciu.update({type(item).__name__: [item]})
@@ -255,17 +267,13 @@ class Ekwipunek:
                     else:
                         self._w_uzyciu[type(item).__name__] += [item]
                         return item.efekt
-            elif isinstance(item, Pozostale):
-                return item.efekt
-            else:
-                self._w_uzyciu.update({type(item).__name__: [item]})
-                clear()
-                return item.efekt
-            # clear()
-            print("\nPrzedmiot został użyty!\n")
+                return 2
+        elif isinstance(item, Pozostale):
+            return item.efekt
         else:
+            self._w_uzyciu.update({type(item).__name__: [item]})
             clear()
-            print("\nPrzedmiotu nie da się użyć!\n")
+            return item.efekt
 
     def zdejmij(self, item: Przedmiot):
         """
@@ -283,11 +291,12 @@ class Ekwipunek:
             for przedmiot in przedmioty:
                 if przedmiot == item:
                     to_remove_key = typ_przedmiotu
-                    break
             if to_remove_key:
                 self.w_uzyciu[to_remove_key].remove(item)
                 if not self.w_uzyciu[to_remove_key]:
                     del self.w_uzyciu[to_remove_key]
+            if item.efekt:
+                return item.efekt
 
     def interfejs(self, lokalizacja: Lokalizacja):
         """
@@ -330,17 +339,32 @@ class Ekwipunek:
                         set(przedmioty) & set(object_list)
                     ):
                         print(
-                            f"{identifier} * " + nazwa_przedmiotów + "    #" + " sztuk " + str(len(przedmioty))
+                            f"{identifier} * "
+                            + nazwa_przedmiotów
+                            + "    #"
+                            + " sztuk "
+                            + str(len(przedmioty))
                         )
                         slownik_interfejsu[identifier] = nazwa_przedmiotów
                         identifier += 1
                     # sprawdzam, czy dany przedmiot można użyć
                     elif przedmioty[0].efekt:
-                        print(f"{identifier} " + nazwa_przedmiotów + "   #" + " sztuk " + str(len(przedmioty)))
+                        print(
+                            f"{identifier} "
+                            + nazwa_przedmiotów
+                            + "   #"
+                            + " sztuk "
+                            + str(len(przedmioty))
+                        )
                         slownik_interfejsu[identifier] = nazwa_przedmiotów
                         identifier += 1
                     else:
-                        print(f"{identifier} " + nazwa_przedmiotów + " sztuk " + str(len(przedmioty)))
+                        print(
+                            f"{identifier} "
+                            + nazwa_przedmiotów
+                            + " sztuk "
+                            + str(len(przedmioty))
+                        )
                         slownik_interfejsu[identifier] = nazwa_przedmiotów
                         identifier += 1
             identifier_przedmiotu = input(
@@ -348,7 +372,7 @@ class Ekwipunek:
             )
             if identifier_przedmiotu == "exit":
                 clear()
-                break
+                return
             try:
                 # kontener = 'Bronie'
                 # przedmioty = {'Szept Burzy':
@@ -374,9 +398,9 @@ class Ekwipunek:
                         ]  # nazwa przedmiotu
                     ) in przedmioty:
                         # item = <__main__.BronJednoreczna object at 0x1025a8b80>
-                        item: Przedmiot = self.wyswietl_magazyn()[kontener][
-                            przedmiot
-                        ][0]
+                        item: Przedmiot = self.wyswietl_magazyn()[kontener][przedmiot][
+                            0
+                        ]
 
                         # TODO: zmienna uzywane, ktora przechowuje informacje czy przedmiot jest w
                         # uzyciu czy nie - do przegadania czy jest to potrzebne.
@@ -384,7 +408,9 @@ class Ekwipunek:
                         # od tego momentu powinienem wyeksportowac wszystko co jest dalej
                         # do innej funkcji(sprawdzic czy tam byloby GIT) - DONE
                         self.podinterfejs(
-                            item, lokalizacja, przedmiot,
+                            item,
+                            lokalizacja,
+                            przedmiot,
                         )
             except KeyError:
                 clear()
@@ -409,9 +435,7 @@ class Ekwipunek:
         """
 
         przedmioty_w_uzyciu: list[str, Any] = [
-            obj.nazwa
-            for nazwa_obj in self.w_uzyciu.values()
-            for obj in nazwa_obj
+            obj.nazwa for nazwa_obj in self.w_uzyciu.values() for obj in nazwa_obj
         ]
         clear()
         print(f"Wybrany przedmiot:\n{item.nazwa}")
@@ -435,28 +459,42 @@ class Ekwipunek:
                         input(prompt.format(warunek="Zdejmij"))
                     )
                 if wybranie_przedmiotu == 1 and przedmiot not in przedmioty_w_uzyciu:
-                    self.metody_bohatera[0](item)
-                    break
+                    a = self.metody_bohatera["uzyj"](item)
+                    if a == 0:
+                        print("Danego przedmiotu nie można użyć")
+                    if a == 1:
+                        print(
+                            "Nie możesz wybrać danego przedmiotu, ponieważ nie spełniasz wymagań!"
+                        )
+                    elif a == 2:
+                        print(
+                            "Nie możesz użyć większej ilości run niż 7 w danym momencie!"
+                        )
+                    elif isinstance(a, dict):
+                        print("Przedmiot został użyty!")
+                    return
                 if wybranie_przedmiotu == 1 and przedmiot in przedmioty_w_uzyciu:
-                    self.metody_bohatera[3](item)
-                    clear() # pod indexem 0
+                    self.metody_bohatera["zdejmij"](item)
+                    clear()  # pod indexem 0
                     print("\nPrzedmiot został zdjęty!\n")
-                    break
+                    return
                 if wybranie_przedmiotu == 2:
                     clear()
-                    if self.metody_bohatera[2](item) is None: # pod indexem 0 is None:
-                        break
+                    if (
+                        self.metody_bohatera["wyrzuc"](item) is None
+                    ):  # pod indexem 0 is None:
+                        return
                     lokalizacja.zawartosc.append(item)
-                    print("\nPrzedmiot został wyrzucony!16")
-                    break
+                    print("\nPrzedmiot został wyrzucony!")
+                    return
                 if wybranie_przedmiotu == 3:
                     clear()
                     print("\nPrzedmiot został odłożony, wybierz inny\n")
-                    break
+                    return
                 clear()
                 print("Nie wpisano 1, 2, 3")
-                break
+                return
             except ValueError:
                 clear()
                 print("Nie wpisano 1, 2, 3")
-                break
+                return

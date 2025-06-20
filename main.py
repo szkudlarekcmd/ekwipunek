@@ -7,10 +7,10 @@ Wszystko w pierdolnikach jest oficjalne
 
 from bohater import Bohater
 from clear import clear
-from lokalizacje.lokalizacja import Lokalizacja
 from lokalizacje.gornicza_dolina import GorniczaDolina
 from lokalizacje.jarkendar import Jarkendar
 from lokalizacje.khorinis import Khorinis
+from lokalizacje.lokalizacja import Lokalizacja
 from oselka import Oselka
 
 khorinis = Khorinis()

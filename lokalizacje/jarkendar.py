@@ -22,14 +22,15 @@ class Jarkendar(Lokalizacja):
         super().__init__()
         self.zawartosc = [
             BronJednoreczna(
-                "Jaszczurzy miecz", 1360, {"Siła": 40}, {"obrazenia": 100}, 3
+                "Jaszczurzy miecz", 1360, {"sila": 40}, {"obrazenia": 100}, 3
             ),
             BronJednoreczna(
-                "Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}, 3
+                "Miecz z Jarkendaru", 25, {"sila": 15}, {"obrazenia": 40}, 3
             ),
             BronJednoreczna(
-                "Miecz z Jarkendaru", 25, {"Siła": 15}, {"obrazenia": 40}, 3
+                "Miecz z Jarkendaru", 25, {"sila": 15}, {"obrazenia": 40}, 3
             ),
+            BronJednoreczna("BronDodajacaHpIChuj", 25, {"sila": 1}, {"hp": 20}, 3),
             Pancerz(
                 "Zbroja z Jaszczura",
                 3000,
@@ -39,10 +40,10 @@ class Jarkendar(Lokalizacja):
                     "Ochrona przed ogniem": 35,
                     "Ochrona przed magia": 15,
                 },
-                {"Siła": 15},
+                {"sila": 15},
             ),
             Runa(
-                "Bryła lodu z Jarkendaru", 700, 50, {"obrazenia": 10}, 3, {"Siła": 30}
+                "Bryła lodu z Jarkendaru", 700, 50, {"obrazenia": 10}, 3, {"sila": 30}
             ),
             Pismo(
                 "Dwór Irdorath z Jarkendaru",
@@ -56,4 +57,6 @@ class Jarkendar(Lokalizacja):
             ),
             Jedzenie("Gulasz Thekli", 1, {"sila": 1, "smak": "Zajebisty", "hp": 20}),
             Jedzenie("Gulasz Thekli", 1, {"sila": 1, "smak": "Zajebisty", "hp": 20}),
+            Jedzenie("Jabłko", 1, {"sila": 100}),
+            Jedzenie("Maliny", 1, {"zrecznosc": 100}),
         ]
